@@ -1,0 +1,1 @@
+from .init_data import verify_init_data
