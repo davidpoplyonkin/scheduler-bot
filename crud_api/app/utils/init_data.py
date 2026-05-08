@@ -49,13 +49,13 @@ def verify_init_data(
         init_data_hash = data.pop("hash")
     except KeyError:
         raise init_data_invalid
-    
+
     authentic_hash = get_init_data_hash(data)
 
     # Ensure that the hashes match
     if not hmac.compare_digest(authentic_hash, init_data_hash):
         raise init_data_invalid
-    
+
     # Check if InitData is expired
     if int(time()) - int(data.get("auth_date", 0)) > INIT_DATA_EXP_SECONDS:
         raise init_data_expired

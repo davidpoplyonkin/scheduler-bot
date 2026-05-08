@@ -7,7 +7,7 @@ from config import JWT_SECRET, JWT_ALGORITHM
 from schemas import UserAuthSchema, Role
 
 async def get_current_user(
-    token: Optional[str] = Cookie(None)
+    token: Optional[str] = Cookie(None),
 ) -> UserAuthSchema:
     """
     Get the current user from the JWT
@@ -22,7 +22,7 @@ async def get_current_user(
         )
 
         return UserAuthSchema(
-            tg_id=payload.get("sub"),
+            id=int(payload.get("sub")),
             role=payload.get("role"),
         )
     except jwt.ExpiredSignatureError:

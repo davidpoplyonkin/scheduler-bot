@@ -1,19 +1,22 @@
 from fastapi import APIRouter, Depends
+from typing import List
 
-from schemas import WhoAmISchema, UserAuthSchema, Role
-from deps import authorize_current_user
+from schemas import AppointmentResponse, UserAuthSchema, Role
+from deps import authorize_current_user, DBSessionDep
+import crud
 
 router = APIRouter(
     prefix="",
     tags=["user"],
 )
 
-@router.get("/", response_model=WhoAmISchema)
-async def whoami(
-    user: UserAuthSchema = Depends(authorize_current_user([Role.USER, Role.ADMIN]))
-) -> WhoAmISchema:
+@router.get("/appointments", response_model=List[AppointmentResponse])
+async def get_user_appointments(
+    session: DBSessionDep,
+    user: UserAuthSchema = Depends(authorize_current_user([Role.USER]))
+) -> List[AppointmentResponse]:
     """
-    Return the sender's Telegram ID
+    Return future appointments for the current user
     """
-    
-    return WhoAmISchema(tg_id=user.tg_id)
+
+    return await crud.get_user_appointments(session, user.id)

@@ -1,2 +1,2 @@
 from .auth import Role, UserAuthSchema, TokenRequest, TokenResponse
-from .tmp import WhoAmISchema
+from .appointment import AppointmentResponse

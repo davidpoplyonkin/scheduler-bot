@@ -8,10 +8,8 @@ class Role(str, Enum):
     USER = "user"
 
 class UserAuthSchema(BaseModel):
-    tg_id: str
+    id: int
     role: Role
-
-    model_config = config_dict
 
 class TokenRequest(BaseModel):
     init_data: str
@@ -22,4 +20,3 @@ class TokenResponse(BaseModel):
     role: Role
 
     model_config = config_dict
-

@@ -3,10 +3,16 @@ services:
     build:
       context: ./crud_api
     environment:
+      - IANA_TZ=${IANA_TZ}
       - API_ALLOW_ORIGINS=${API_ALLOW_ORIGINS}
       - ADMIN_TG_ID=${ADMIN_TG_ID}
       - TG_TOKEN=${TG_TOKEN}
       - JWT_SECRET=${JWT_SECRET}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    depends_on:
+      - postgres
     networks:
       - internal
   tg-mini-app:
@@ -16,6 +22,16 @@ services:
         - VITE_CRUD_API_URL=${API_URL}
     depends_on:
       - crud-api
+    networks:
+      - internal
+  postgres:
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     networks:
       - internal
   nginx:
@@ -29,6 +45,9 @@ services:
     networks:
       - master-nginx-network
       - internal
+
+volumes:
+  postgres_data:
 
 networks:
   internal:
