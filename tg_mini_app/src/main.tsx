@@ -1,19 +1,35 @@
 import '@mantine/core/styles.css';
 
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Suspense, useState, useEffect } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { StrictMode, useState, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { QueryClient } from '@tanstack/react-query';
 import { MantineProvider, type CSSVariablesResolver } from '@mantine/core';
 
-import LoadingScreen from './components/LoadingScreen';
-import ErrorScreen from './components/ErrorScreen';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+// Import the generated route tree
+import { routeTree } from './routeTree.gen';
 
-import App from './App.tsx'
+const queryClient = new QueryClient()
+
+// Create a new router instance
+const router = createRouter({
+  routeTree,
+  context: {
+    queryClient,
+  },
+  defaultPreloadStaleTime: 0, // Delegate caching to Tanstack Query
+})
+
+// Register the router instance for type safety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 const tg = window.Telegram.WebApp;
 
+// Match Telegram's CSS variables to Mantine's theming system
 const resolver: CSSVariablesResolver = (_theme) => ({
   variables: {},
   light: {
@@ -24,8 +40,6 @@ const resolver: CSSVariablesResolver = (_theme) => ({
   },
 });
 
-const queryClient = new QueryClient()
-
 function Root() {
   const [theme, setTheme] = useState(tg.colorScheme);
 
@@ -33,7 +47,6 @@ function Root() {
     tg.ready();
 
     const handleThemeChange = () => {
-      console.log('Theme changed to', tg.colorScheme);
       setTheme(tg.colorScheme);
     };
 
@@ -48,16 +61,15 @@ function Root() {
   return (
     <StrictMode>
       <MantineProvider forceColorScheme={theme} cssVariablesResolver={resolver}>
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary fallback={<ErrorScreen />}>
-            <Suspense fallback={<LoadingScreen />}>
-              <App />
-            </Suspense>
-          </ErrorBoundary>
-        </QueryClientProvider>
+        <RouterProvider router={router} />
       </MantineProvider>
     </StrictMode>
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Root />);
+// Render the app
+const rootElement = document.getElementById('root')!
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement)
+  root.render(<Root />)
+}

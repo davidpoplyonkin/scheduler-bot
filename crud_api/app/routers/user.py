@@ -6,7 +6,7 @@ from deps import authorize_current_user, DBSessionDep
 import crud
 
 router = APIRouter(
-    prefix="",
+    prefix="/user",
     tags=["user"],
 )
 
