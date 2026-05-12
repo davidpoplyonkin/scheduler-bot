@@ -1,13 +1,15 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 
 import { StrictMode, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient } from '@tanstack/react-query';
-import { MantineProvider, type CSSVariablesResolver } from '@mantine/core';
+import { MantineProvider, createTheme } from '@mantine/core';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
+import { generateShades } from './utils/shades';
 
 const queryClient = new QueryClient()
 
@@ -29,25 +31,22 @@ declare module '@tanstack/react-router' {
 
 const tg = window.Telegram.WebApp;
 
-// Match Telegram's CSS variables to Mantine's theming system
-const resolver: CSSVariablesResolver = (_theme) => ({
-  variables: {},
-  light: {
-    '--mantine-color-body': 'var(--tg-theme-bg-color, #ffffff)'
-  },
-  dark: {
-    '--mantine-color-body': 'var(--tg-theme-bg-color, #000000)'
-  },
-});
-
 function Root() {
-  const [theme, setTheme] = useState(tg.colorScheme);
+  const [colorScheme, setColorScheme] = useState(tg.colorScheme);
+  const [tgPrimaryColor, setTgPrimaryColor] = useState(
+    generateShades(tg.themeParams.button_color)
+  );
+  const [tgBgColor, setTgBgColor] = useState(
+    generateShades(tg.themeParams.bg_color)
+  );
 
   useEffect(() => {
     tg.ready();
 
     const handleThemeChange = () => {
-      setTheme(tg.colorScheme);
+      setColorScheme(tg.colorScheme);
+      setTgPrimaryColor(generateShades(tg.themeParams.button_color));
+      setTgBgColor(generateShades(tg.themeParams.bg_color));
     };
 
     // Listen for theme changes
@@ -58,9 +57,30 @@ function Root() {
     };
   }, []);
 
+  const theme = createTheme({
+    colors: {
+      tgPrimaryColor,
+
+      // When the mode is dark, use the palette derived from the Telegram
+      // background color for the app background, the backgrounds of disabled
+      // elements, etc.
+      dark: tgBgColor,
+
+      // Not overriding the `gray` palette (`dark` alternative in light mode)
+      // since Telegram's background color in light mode appears to always be
+      // white, which isn't a good base for palette generation (e.g. the 7th
+      // shade in the palette must match the background color)
+    },
+    primaryColor: 'tgPrimaryColor',
+    primaryShade: 7,
+  });
+
   return (
     <StrictMode>
-      <MantineProvider forceColorScheme={theme} cssVariablesResolver={resolver}>
+      <MantineProvider
+        theme={theme}
+        forceColorScheme={colorScheme}
+      >
         <RouterProvider router={router} />
       </MantineProvider>
     </StrictMode>

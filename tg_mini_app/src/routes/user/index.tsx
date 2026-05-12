@@ -7,7 +7,7 @@ import { AppointmentListSchema } from '../../types/GetAppointmentsResponse';
 const UserAppointmentsQueryOptions = queryOptions({
   queryKey: ['user-appointments'],
     queryFn: async () => {
-      const response = await crud_api.get('/appointments');
+      const response = await crud_api.get('user/appointments');
       const parsed = AppointmentListSchema.parse(response.data);
       return parsed;
     },

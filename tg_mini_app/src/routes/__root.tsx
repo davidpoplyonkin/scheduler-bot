@@ -9,10 +9,10 @@ import ErrorScreen from '../components/ErrorScreen';
 const RootLayout = () => (
   <Container
       size={480}
-      pt='var(--tg-safe-area-inset-top)'
-      pb='var(--tg-safe-area-inset-bottom)'
-      ps='var(--tg-safe-area-inset-left)'
-      pe='var(--tg-safe-area-inset-right)'
+      pt='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-top))'
+      pb='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-bottom))'
+      ps='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-left))'
+      pe='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-right))'
     >
     <Outlet />
     <TanStackRouterDevtools />

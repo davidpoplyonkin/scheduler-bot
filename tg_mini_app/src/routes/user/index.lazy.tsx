@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Table } from '@mantine/core'
 
@@ -9,14 +9,17 @@ export const Route = createLazyFileRoute('/user/')({
 const tg = window.Telegram.WebApp;
 
 function UserList() {
+  const navigate = useNavigate();
+  
   useEffect(() => {
+
     // Render Telegram MainButton
     tg.MainButton.setText("Book");
     tg.MainButton.show();
 
     // Open the booking form
     const handleMainButtonClick = () => {
-      console.log("Button clicked!");
+      navigate({ to: '/user/booking' });
     };
 
     tg.MainButton.onClick(handleMainButtonClick);

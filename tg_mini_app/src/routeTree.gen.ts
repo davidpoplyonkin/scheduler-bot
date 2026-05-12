@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserIndexRouteImport } from './routes/user/index'
 
 const AdminIndexLazyRouteImport = createFileRoute('/admin/')()
+const UserBookingLazyRouteImport = createFileRoute('/user/booking')()
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -31,33 +32,42 @@ const UserIndexRoute = UserIndexRouteImport.update({
   path: '/user/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/user/index.lazy').then((d) => d.Route))
+const UserBookingLazyRoute = UserBookingLazyRouteImport.update({
+  id: '/user/booking',
+  path: '/user/booking',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/user/booking.lazy').then((d) => d.Route))
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/user/booking': typeof UserBookingLazyRoute
   '/user/': typeof UserIndexRoute
   '/admin/': typeof AdminIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/user/booking': typeof UserBookingLazyRoute
   '/user': typeof UserIndexRoute
   '/admin': typeof AdminIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/user/booking': typeof UserBookingLazyRoute
   '/user/': typeof UserIndexRoute
   '/admin/': typeof AdminIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/user/' | '/admin/'
+  fullPaths: '/' | '/user/booking' | '/user/' | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/user' | '/admin'
-  id: '__root__' | '/' | '/user/' | '/admin/'
+  to: '/' | '/user/booking' | '/user' | '/admin'
+  id: '__root__' | '/' | '/user/booking' | '/user/' | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  UserBookingLazyRoute: typeof UserBookingLazyRoute
   UserIndexRoute: typeof UserIndexRoute
   AdminIndexLazyRoute: typeof AdminIndexLazyRoute
 }
@@ -85,11 +95,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/user/booking': {
+      id: '/user/booking'
+      path: '/user/booking'
+      fullPath: '/user/booking'
+      preLoaderRoute: typeof UserBookingLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  UserBookingLazyRoute: UserBookingLazyRoute,
   UserIndexRoute: UserIndexRoute,
   AdminIndexLazyRoute: AdminIndexLazyRoute,
 }
