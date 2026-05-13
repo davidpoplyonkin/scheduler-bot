@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, Date, BigInteger, Integer, Index
-import datetime
+from sqlalchemy import ForeignKey, BigInteger, Integer
 
 from database import Base
-from models import TimeSlot
+from models import Block
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -12,17 +11,14 @@ class Appointment(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.id"),
+        index=True,
         nullable=False,
     )
-    date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    time_slot_id: Mapped[int] = mapped_column(
+    block_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("time_slots.id"),
-        nullable=False
+        ForeignKey("blocks.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
     )
 
-    time_slot: Mapped[TimeSlot] = relationship()
-
-    __table_args__ = (
-        Index("ix_user_date", "user_id", "date"),
-    )
+    block: Mapped[Block] = relationship()
