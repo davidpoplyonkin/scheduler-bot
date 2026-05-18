@@ -11,7 +11,7 @@ async def get_user_appointments(
         user_id: int,
     ) -> List[Appointment]:
 
-    today_date = get_today_in_tz()
+    today_date = get_today_in_tz().date()
 
     statement = (
         select(Appointment)

@@ -1,19 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { queryOptions } from '@tanstack/react-query';
 
-import getToken from '../utils/auth';
-
-const authQueryOptions = queryOptions({
-  queryKey: ['auth'],
-  queryFn: getToken,
-  staleTime: Infinity,
-  retry: false,
-})
+import { AuthQueryOptions } from './index.queries';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async ({ context: { queryClient } }) => {
     // Fetch the user role from the API
-    const role = await queryClient.ensureQueryData(authQueryOptions);
+    const role = await queryClient.ensureQueryData(AuthQueryOptions);
 
     // Conditionally redirect based on the user's role
     if (role === 'admin') {
