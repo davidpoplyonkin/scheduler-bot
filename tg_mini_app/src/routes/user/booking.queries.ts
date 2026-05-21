@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { queryOptions, mutationOptions } from '@tanstack/react-query';
 
 import crud_api from '../../services/crud';
 import { ConstraintGetResponseSchema } from '../../types/ConstraintUserGetResponse';
@@ -24,4 +24,13 @@ export const UserBlocksQueryOptions = (month: string) => queryOptions({
   },
   staleTime: 1000 * 60 * 5,
   retry: false, // handled by an axios interceptor
+})
+
+export const CreateAppointmentMutationOptions = mutationOptions({
+  mutationFn: async (values: { date: string; slot: number }) => {
+    return crud_api.post('user/appointments', {
+      date: values.date,
+      timeSlotId: values.slot
+    });
+  },
 })

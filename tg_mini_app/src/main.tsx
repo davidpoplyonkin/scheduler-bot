@@ -1,17 +1,21 @@
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import '@mantine/notifications/styles.css';
 
-import { StrictMode, useState, useEffect } from 'react';
+import { StrictMode, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
 import { generateShades } from './utils/shades';
 
-const queryClient = new QueryClient()
+import { useThemeStore } from './stores/ThemeStore';
+
+const queryClient = new QueryClient();
 
 // Create a new router instance
 const router = createRouter({
@@ -32,21 +36,20 @@ declare module '@tanstack/react-router' {
 const tg = window.Telegram.WebApp;
 
 function Root() {
-  const [colorScheme, setColorScheme] = useState(tg.colorScheme);
-  const [tgPrimaryColor, setTgPrimaryColor] = useState(
-    generateShades(tg.themeParams.button_color)
-  );
-  const [tgBgColor, setTgBgColor] = useState(
-    generateShades(tg.themeParams.bg_color)
-  );
+  const colorScheme = useThemeStore((state) => state.colorScheme);
+  const primaryColor = useThemeStore((state) => state.primaryColor);
+  const backgroundColor = useThemeStore((state) => state.backgroundColor);
+  const setTheme = useThemeStore((state) => state.setTheme);
 
   useEffect(() => {
     tg.ready();
 
     const handleThemeChange = () => {
-      setColorScheme(tg.colorScheme);
-      setTgPrimaryColor(generateShades(tg.themeParams.button_color));
-      setTgBgColor(generateShades(tg.themeParams.bg_color));
+      setTheme(
+        tg.colorScheme,
+        tg.themeParams.button_color,
+        tg.themeParams.bg_color
+      );
     };
 
     // Listen for theme changes
@@ -59,12 +62,12 @@ function Root() {
 
   const theme = createTheme({
     colors: {
-      tgPrimaryColor,
+      tgPrimaryColor: generateShades(primaryColor),
 
       // When the mode is dark, use the palette derived from the Telegram
       // background color for the app background, the backgrounds of disabled
       // elements, etc.
-      dark: tgBgColor,
+      dark: generateShades(backgroundColor),
 
       // Not overriding the `gray` palette (`dark` alternative in light mode)
       // since Telegram's background color in light mode appears to always be
@@ -81,7 +84,10 @@ function Root() {
         theme={theme}
         forceColorScheme={colorScheme}
       >
-        <RouterProvider router={router} />
+        <Notifications />
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
       </MantineProvider>
     </StrictMode>
   );

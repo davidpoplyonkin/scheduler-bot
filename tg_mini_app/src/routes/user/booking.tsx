@@ -11,7 +11,10 @@ export const Route = createFileRoute('/user/booking')({
 
     const [constraints, blocksResponse ] = await Promise.all([
       queryClient.ensureQueryData(UserConstraintsQueryOptions),
-      queryClient.ensureQueryData(UserBlocksQueryOptions(month)),
+      queryClient.ensureQueryData({
+        ...UserBlocksQueryOptions(month),
+        revalidateIfStale: true,
+      }),
     ]);
 
     return { constraints, blocksResponse };

@@ -2,6 +2,9 @@ import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Table } from '@mantine/core'
 
+import { UserAppointmentsQueryOptions } from './index.queries'
+import { useQuery } from '@tanstack/react-query'
+
 export const Route = createLazyFileRoute('/user/')({
   component: UserList,
 })
@@ -25,15 +28,14 @@ function UserList() {
     tg.MainButton.onClick(handleMainButtonClick);
 
     return () => {
-      tg.MainButton.hide();
       tg.MainButton.offClick(handleMainButtonClick);
     };
   }, []);
 
-  const appointments = Route.useLoaderData();
+  const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
 
-  const rows = appointments.map((appointment) => (
-    <Table.Tr key={appointment.date}>
+  const rows = appointments?.map((appointment) => (
+    <Table.Tr key={appointment.id}>
       <Table.Td>{appointment.date}</Table.Td>
       <Table.Td>{appointment.time}</Table.Td>
     </Table.Tr>

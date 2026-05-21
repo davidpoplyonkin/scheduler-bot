@@ -1,6 +1,7 @@
 import z from 'zod';
 
 export const AppointmentIn = z.object({
+  id: z.number(),
   date: z.string(),
   time: z.string(),
 });
