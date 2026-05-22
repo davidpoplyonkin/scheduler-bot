@@ -2,9 +2,15 @@ import os
 
 IANA_TZ = os.getenv("IANA_TZ")
 
+MIN_ADVANCE_MINUTES = int(os.getenv("MIN_ADVANCE_MINUTES"))
+MAX_ADVANCE_DAYS = int(os.getenv("MAX_ADVANCE_DAYS"))
+FORBIDDEN_WEEKDAYS = [
+    int(d) for d in os.getenv("FORBIDDEN_WEEKDAYS", "5,6").split(",")
+]
+
 API_ALLOW_ORIGINS = os.getenv("API_ALLOW_ORIGINS").split(",")
 
-ADMIN_TG_ID = os.getenv("ADMIN_TG_ID")
+ADMIN_TG_ID = int(os.getenv("ADMIN_TG_ID"))
 TG_TOKEN = os.getenv("TG_TOKEN")
 INIT_DATA_EXP_SECONDS = 60 * 60 * 24 * 3
 

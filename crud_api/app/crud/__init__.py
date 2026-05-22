@@ -1,2 +1,4 @@
 from .user import upsert_user
-from .appointment import get_user_appointments
+from .appointment import get_user_appointments, reserve_appointment
+from .time_slot import get_time_slots
+from .block import get_blocks

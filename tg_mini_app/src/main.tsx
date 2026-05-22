@@ -1,40 +1,55 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+import '@mantine/notifications/styles.css';
 
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Suspense, useState, useEffect } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { MantineProvider, type CSSVariablesResolver } from '@mantine/core';
+import { StrictMode, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 
-import LoadingScreen from './components/LoadingScreen';
-import ErrorScreen from './components/ErrorScreen';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+// Import the generated route tree
+import { routeTree } from './routeTree.gen';
+import { generateShades } from './utils/shades';
 
-import App from './App.tsx'
+import { useThemeStore } from './stores/ThemeStore';
+
+const queryClient = new QueryClient();
+
+// Create a new router instance
+const router = createRouter({
+  routeTree,
+  context: {
+    queryClient,
+  },
+  defaultPreloadStaleTime: 0, // Delegate caching to Tanstack Query
+})
+
+// Register the router instance for type safety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 const tg = window.Telegram.WebApp;
 
-const resolver: CSSVariablesResolver = (_theme) => ({
-  variables: {},
-  light: {
-    '--mantine-color-body': 'var(--tg-theme-bg-color, #ffffff)'
-  },
-  dark: {
-    '--mantine-color-body': 'var(--tg-theme-bg-color, #000000)'
-  },
-});
-
-const queryClient = new QueryClient()
-
 function Root() {
-  const [theme, setTheme] = useState(tg.colorScheme);
+  const colorScheme = useThemeStore((state) => state.colorScheme);
+  const primaryColor = useThemeStore((state) => state.primaryColor);
+  const backgroundColor = useThemeStore((state) => state.backgroundColor);
+  const setTheme = useThemeStore((state) => state.setTheme);
 
   useEffect(() => {
     tg.ready();
 
     const handleThemeChange = () => {
-      console.log('Theme changed to', tg.colorScheme);
-      setTheme(tg.colorScheme);
+      setTheme(
+        tg.colorScheme,
+        tg.themeParams.button_color,
+        tg.themeParams.bg_color
+      );
     };
 
     // Listen for theme changes
@@ -45,19 +60,42 @@ function Root() {
     };
   }, []);
 
+  const theme = createTheme({
+    colors: {
+      tgPrimaryColor: generateShades(primaryColor),
+
+      // When the mode is dark, use the palette derived from the Telegram
+      // background color for the app background, the backgrounds of disabled
+      // elements, etc.
+      dark: generateShades(backgroundColor),
+
+      // Not overriding the `gray` palette (`dark` alternative in light mode)
+      // since Telegram's background color in light mode appears to always be
+      // white, which isn't a good base for palette generation (e.g. the 7th
+      // shade in the palette must match the background color)
+    },
+    primaryColor: 'tgPrimaryColor',
+    primaryShade: 7,
+  });
+
   return (
     <StrictMode>
-      <MantineProvider forceColorScheme={theme} cssVariablesResolver={resolver}>
+      <MantineProvider
+        theme={theme}
+        forceColorScheme={colorScheme}
+      >
+        <Notifications position="top-center" /> 
         <QueryClientProvider client={queryClient}>
-          <ErrorBoundary fallback={<ErrorScreen />}>
-            <Suspense fallback={<LoadingScreen />}>
-              <App />
-            </Suspense>
-          </ErrorBoundary>
+          <RouterProvider router={router} />
         </QueryClientProvider>
       </MantineProvider>
     </StrictMode>
   );
 }
 
-createRoot(document.getElementById('root')!).render(<Root />);
+// Render the app
+const rootElement = document.getElementById('root')!
+if (!rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement)
+  root.render(<Root />)
+}

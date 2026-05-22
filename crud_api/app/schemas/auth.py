@@ -11,12 +11,12 @@ class UserAuthSchema(BaseModel):
     id: int
     role: Role
 
-class TokenRequest(BaseModel):
+class TokenGetRequest(BaseModel):
     init_data: str
 
     model_config = config_dict
 
-class TokenResponse(BaseModel):
+class TokenGetResponse(BaseModel):
     role: Role
 
     model_config = config_dict

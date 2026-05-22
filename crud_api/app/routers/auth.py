@@ -4,7 +4,7 @@ from urllib.parse import parse_qsl
 import json
 from datetime import datetime, timezone, timedelta
 
-from schemas import Role, TokenRequest, TokenResponse
+from schemas import Role, TokenGetRequest, TokenGetResponse
 from utils import verify_init_data
 from crud import upsert_user
 from deps import DBSessionDep
@@ -15,12 +15,12 @@ router = APIRouter(
     tags=["auth"],
 )
 
-@router.post("/token", response_model=TokenResponse)
+@router.post("/token", response_model=TokenGetResponse)
 async def issue_token(
     session: DBSessionDep,
-    request: TokenRequest,
+    request: TokenGetRequest,
     response: Response
-) -> TokenResponse:
+) -> TokenGetResponse:
     """
     Exchange Telegram InitData for a JWT
     """
@@ -64,4 +64,4 @@ async def issue_token(
         secure=True
     )
     
-    return TokenResponse(role=role)
+    return TokenGetResponse(role=role)

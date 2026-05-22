@@ -6,6 +6,7 @@
     "module": "esnext",
     "types": ["vite/client", "@types/telegram-web-app"],
     "skipLibCheck": true,
+    "strictNullChecks": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

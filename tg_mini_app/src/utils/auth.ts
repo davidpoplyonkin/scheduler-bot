@@ -3,7 +3,7 @@ import axios from 'axios';
 import { AuthResponseSchema } from '../types/AuthResponse';
 import type { Role } from '../types/Role';
 
-const WebApp = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 
 // Holds the pending request for a new token
 let tokenPromise: Promise<Role> | null = null;
@@ -14,7 +14,7 @@ async function getToken(): Promise<Role> {
     // Call the backend to exchange InitData for a Cookie
     tokenPromise = axios.post(
       import.meta.env.VITE_CRUD_API_URL + '/auth/token',
-      { initData: WebApp.initData },
+      { initData: tg.initData },
       { withCredentials: true }
 
     ).then(response => {
