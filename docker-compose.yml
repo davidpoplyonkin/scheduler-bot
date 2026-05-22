@@ -4,6 +4,9 @@ services:
       context: ./crud_api
     environment:
       - IANA_TZ=${IANA_TZ}
+      - MIN_ADVANCE_MINUTES=${MIN_ADVANCE_MINUTES}
+      - MAX_ADVANCE_DAYS=${MAX_ADVANCE_DAYS}
+      - FORBIDDEN_WEEKDAYS=${FORBIDDEN_WEEKDAYS}
       - API_ALLOW_ORIGINS=${API_ALLOW_ORIGINS}
       - ADMIN_TG_ID=${ADMIN_TG_ID}
       - TG_TOKEN=${TG_TOKEN}

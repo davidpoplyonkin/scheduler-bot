@@ -11,5 +11,8 @@ class TimeSlotOut(BaseModel):
 
 class ConstraintGetResponse(BaseModel):
     time_slots: list[TimeSlotOut]
+    min_advance_minutes: int
+    max_advance_days: int
+    forbidden_weekdays: list[int]
 
     model_config = config_dict  

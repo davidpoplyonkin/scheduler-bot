@@ -7,6 +7,9 @@ export const TimeSlotIn = z.object({
 
 export const ConstraintGetResponseSchema = z.object({
   timeSlots: z.array(TimeSlotIn),
+  minAdvanceMinutes: z.number(),
+  maxAdvanceDays: z.number(),
+  forbiddenWeekdays: z.array(z.number()),
 });
 
 export type ConstraintGetResponse = z.infer<typeof ConstraintGetResponseSchema>;

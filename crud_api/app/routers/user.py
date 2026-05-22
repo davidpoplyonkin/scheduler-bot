@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from typing import List, Annotated
 import datetime
 
 from schemas import *
 from deps import authorize_current_user, DBSessionDep
 from utils import get_today_in_tz
+from config import MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS
 import crud
 
 router = APIRouter(
@@ -35,7 +36,12 @@ async def get_constraints(
     Return business rules required to render the date picker
     """
     time_slots = await crud.get_time_slots(session)
-    return ConstraintGetResponse(time_slots=time_slots)
+    return ConstraintGetResponse(
+        time_slots=time_slots,
+        min_advance_minutes=MIN_ADVANCE_MINUTES,
+        max_advance_days=MAX_ADVANCE_DAYS,
+        forbidden_weekdays=FORBIDDEN_WEEKDAYS
+    )
 
 @router.get(
     "/blocks",
@@ -85,6 +91,27 @@ async def reserve_appointment(
     """
     Reserve an appointment for the current user
     """
+    now = get_today_in_tz()
+    min_date = (now + datetime.timedelta(minutes=MIN_ADVANCE_MINUTES)).date()
+    max_date = (now + datetime.timedelta(days=MAX_ADVANCE_DAYS)).date()
+
+    if request.date < min_date:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Date is too soon"
+        )
+
+    if request.date > max_date:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Date is too far in advance"
+        )
+
+    if request.date.weekday() in FORBIDDEN_WEEKDAYS:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Appointments not available on this day"
+        )
 
     appointment = await crud.reserve_appointment(
         session,
