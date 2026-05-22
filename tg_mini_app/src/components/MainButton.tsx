@@ -6,17 +6,18 @@ import { useThemeStore } from '../stores/ThemeStore';
 const tg = window.Telegram.WebApp;
 
 interface MainButtonProps {
-  formValid: boolean;
-  triggerSubmit: () => void;
+  text: string;
+  isActive: boolean;
+  callback: () => void;
 }
 
-export function MainButton({ formValid, triggerSubmit }: MainButtonProps) {
+export function MainButton({ text, isActive, callback }: MainButtonProps) {
   useEffect(() => {
-    tg.MainButton.setText('Submit');
+    tg.MainButton.setText(text);
     tg.MainButton.show();
 
     const handleMainButtonClick = () => {
-      triggerSubmit();
+      callback();
     };
 
     tg.MainButton.onClick(handleMainButtonClick);
@@ -29,7 +30,7 @@ export function MainButton({ formValid, triggerSubmit }: MainButtonProps) {
   const theme = useThemeStore();
   useEffect(() => {
     const updateMainButton = async () => {
-      if (formValid) {
+      if (isActive) {
         tg.MainButton.setParams({
           is_active: true,
           color: await resolveCssVar('--mantine-primary-color-filled'),
@@ -45,7 +46,7 @@ export function MainButton({ formValid, triggerSubmit }: MainButtonProps) {
     };
 
     updateMainButton();
-  }, [formValid, theme]);
+  }, [isActive, theme]);
 
   return null;
 }

@@ -1,36 +1,16 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
 import { Table } from '@mantine/core'
+import { useQuery } from '@tanstack/react-query'
 
 import { UserAppointmentsQueryOptions } from './index.queries'
-import { useQuery } from '@tanstack/react-query'
+import { MainButton } from '../../components/MainButton'
 
 export const Route = createLazyFileRoute('/user/')({
   component: UserList,
 })
 
-const tg = window.Telegram.WebApp;
-
 function UserList() {
   const navigate = useNavigate();
-  
-  useEffect(() => {
-
-    // Render Telegram MainButton
-    tg.MainButton.setText("Book");
-    tg.MainButton.show();
-
-    // Open the booking form
-    const handleMainButtonClick = () => {
-      navigate({ to: '/user/booking' });
-    };
-
-    tg.MainButton.onClick(handleMainButtonClick);
-
-    return () => {
-      tg.MainButton.offClick(handleMainButtonClick);
-    };
-  }, []);
 
   const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
 
@@ -42,14 +22,21 @@ function UserList() {
   ));
 
   return (
-    <Table>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Date</Table.Th>
-          <Table.Th>Time</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>{rows}</Table.Tbody>
-    </Table>
+    <>
+      <MainButton
+        text='Book'
+        isActive={true}
+        callback={() => {navigate({ to: '/user/booking' })}}
+      />
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Date</Table.Th>
+            <Table.Th>Time</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{rows}</Table.Tbody>
+      </Table>
+    </>
   );
 }

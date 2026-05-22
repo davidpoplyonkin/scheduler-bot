@@ -187,7 +187,7 @@ function BookingForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
-      <MainButton formValid={formValid} triggerSubmit={triggerSubmit} />
+      <MainButton text='Submit' isActive={formValid} callback={triggerSubmit} />
       <Flex
         direction={{ base: 'column', xs: 'row' }}
         align='center'

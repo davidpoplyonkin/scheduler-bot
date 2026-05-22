@@ -3,6 +3,7 @@ import { type QueryClient } from '@tanstack/react-query';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Container } from '@mantine/core';
 
+import { BackButton } from '../components/BackButton';
 import LoadingScreen from '../components/LoadingScreen';
 import ErrorScreen from '../components/ErrorScreen';
 
@@ -14,6 +15,7 @@ const RootLayout = () => (
       ps='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-left))'
       pe='max(var(--mantine-spacing-xs), var(--tg-safe-area-inset-right))'
     >
+    <BackButton />
     <Outlet />
     <TanStackRouterDevtools />
   </Container>
