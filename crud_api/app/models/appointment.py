@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, BigInteger, Integer
 
 from database import Base
-from models import Block
+from models import Block, User
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -22,3 +22,4 @@ class Appointment(Base):
     )
 
     block: Mapped[Block] = relationship()
+    user: Mapped[User] = relationship()

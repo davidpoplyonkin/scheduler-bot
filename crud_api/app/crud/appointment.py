@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from typing import List
 import datetime
 
-from models import Appointment, Block, TimeSlot
+from models import Appointment, Block, TimeSlot, User
 from utils import get_today_in_tz
 
 async def get_user_appointments(
@@ -90,3 +90,26 @@ async def reserve_appointment(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Non-existent time slot provided."
         )
+
+
+async def get_admin_appointments(
+    session: AsyncSession,
+) -> List[Appointment]:
+    today_date = get_today_in_tz().date()
+
+    statement = (
+        select(Appointment)
+        .join(Appointment.block)
+        .join(Block.time_slot)
+        .join(Appointment.user)
+        .where(Block.date >= today_date)
+        .order_by(Block.date, TimeSlot.start_time)
+        .options(
+            contains_eager(Appointment.block)
+            .contains_eager(Block.time_slot),
+            contains_eager(Appointment.user)
+        )
+    )
+
+    results = await session.execute(statement)
+    return results.unique().scalars().all()

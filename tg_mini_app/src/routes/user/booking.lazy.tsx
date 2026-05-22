@@ -179,7 +179,7 @@ function BookingForm() {
         styles={{ input: {display: 'block'}}} // necessary for a smooth transition
       >
         <Text style={{ fontVariantNumeric: 'tabular-nums' }}>
-          { dayjs(s.startTime, 'HH:mm:ss').format('HH:mm') }
+          { dayjs.utc(s.startTime, 'HH:mm:ss').format('HH:mm') }
         </Text>
       </Chip>
     );
