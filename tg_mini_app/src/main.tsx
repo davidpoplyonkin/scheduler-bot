@@ -84,7 +84,7 @@ function Root() {
         theme={theme}
         forceColorScheme={colorScheme}
       >
-        <Notifications />
+        <Notifications position="top-center" /> 
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
         </QueryClientProvider>
