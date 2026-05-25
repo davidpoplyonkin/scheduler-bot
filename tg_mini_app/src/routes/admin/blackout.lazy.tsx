@@ -8,10 +8,9 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 
 import { BlocksQueryOptions } from '../index.queries';
-import { CreateAppointmentMutationOptions } from './booking.queries';
+import { CreateBlackoutMutationOptions } from './blackout.queries';
 import { MainButton } from '../../components/MainButton';
 import { ChipTransition } from '../../components/ChipTransition';
 import { timeSlotAvailable } from '../../utils/timeSlots';
@@ -19,14 +18,15 @@ import { timeSlotAvailable } from '../../utils/timeSlots';
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 
-export const Route = createLazyFileRoute('/user/booking')({
-  component: BookingForm,
+export const Route = createLazyFileRoute('/admin/blackout')({
+  component: BlackoutForm,
 })
 
 const tg = window.Telegram.WebApp;
 
-function BookingForm() {
+function BlackoutForm() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate();
 
   const { constraints } = Route.useLoaderData();
 
@@ -40,7 +40,6 @@ function BookingForm() {
   // Fetch the data for the current and adjacent months
   const {
     data: blocksResponse,
-    isLoading: blocksLoading
   } = useQuery(BlocksQueryOptions(curMonth));
 
   queryClient.prefetchQuery(BlocksQueryOptions(prevMonth));
@@ -49,65 +48,43 @@ function BookingForm() {
   const form = useForm({
     mode: 'controlled',
     initialValues: {
-      date: null as string | null,
-      slot: null as number | null,
+      dateRange: [null, null] as [string | null, string | null],
+      slots: [] as number[],
     },
     validate: {
-      date: (value) => (value ? null : 'Date is required'),
-      slot: (value) => (value ? null : 'Time slot is required'),
+      dateRange: (value) => {
+        if (!value[0] || !value[1]) return 'Date range is required';
+        return null;
+      },
     },
   });
 
-  // Redirect the user upon submission
-  const navigate = useNavigate();
-  const mutation = useMutation({
-    ...CreateAppointmentMutationOptions,
-    onSuccess: () => {
-      // Ensure that the home page shows the new appointment
-      queryClient.invalidateQueries({ queryKey: ['user-appointments'] });
-      navigate({ to: '/user' });
+  const formRef = useRef<HTMLFormElement>(null);
 
-      // Show a success message
+  const mutation = useMutation({
+    ...CreateBlackoutMutationOptions,
+    onSuccess: () => {
+      navigate({ to: '/admin' });
+
       notifications.show({
         title: 'Success',
-        message: 'The appointment was booked successfully',
+        message: 'Blackout created successfully',
         color: 'green',
       });
     },
-    throwOnError: (error: AxiosError) => {
-      // throw an error for non-409 status codes
-      if (error.response?.status !== 409) {
-        return true; 
-      }
-
-      return false;
-    },
-    onError: (error) => {
-      // If the chosen slot was booked while the user was filling the form
-      if (error instanceof AxiosError && error.response?.status === 409) {
-        // Show an error message
-        notifications.show({
-          title: 'Slot unavailable',
-          message: 'The chosen time slot is no longer available',
-          color: 'red',
-        });
-
-        form.setFieldValue('date', null);
-        form.setFieldValue('slot', null);
-      }
-    },
     onMutate: () => { tg.MainButton.showProgress() },
     onSettled: () => {
-      // No matter who books the slot: the user (success) or someone else
-      // (error 409), the unavailable slots list is no longer up to date
       queryClient.invalidateQueries({ queryKey: ['blocks'] });
-
       tg.MainButton.hideProgress();
     },
   });
 
   const handleSubmit = form.onSubmit((values) => {
-    mutation.mutate({ date: values.date!, slot: values.slot! });
+    mutation.mutate({
+      startDate: values.dateRange[0]!,
+      endDate: values.dateRange[1]!,
+      slots: values.slots,
+    });
   });
 
   // Trigger submission on Telegram MainButton click
@@ -117,7 +94,6 @@ function BookingForm() {
     }
   }
 
-  const formRef = useRef<HTMLFormElement>(null);
   const formValid = form.isValid();
 
   // Time in server's timezone - not UTC
@@ -126,6 +102,10 @@ function BookingForm() {
   // Compute min/max datetime from server time
   const minDateTime = serverTime.add(constraints.minAdvanceMinutes, 'minute');
   const maxDateTime = serverTime.add(constraints.maxAdvanceDays, 'day');
+
+  // Check if a single day is selected
+  const [startDate, endDate] = form.values.dateRange;
+  const isOneDayRange = startDate === endDate && startDate !== null;
 
   const isSlotAvailable = (date: string, slot: typeof constraints.timeSlots[number]) =>
     timeSlotAvailable({
@@ -137,22 +117,12 @@ function BookingForm() {
       maxDateTime,
     });
 
-  const DateUnavailable = (date: string) => {
-    if (blocksLoading) {
-      return true; // exclude by default
-    }
-
-    // Check if any of the time slots is available
-    return !constraints.timeSlots.some((s) => isSlotAvailable(date, s));
-  };
-
   const chips = constraints.timeSlots.map((s) => {
-    const date = form.getValues().date;
-
-    const disabled = date ? !isSlotAvailable(date, s) : true;
+    const disabled = isOneDayRange ? !isSlotAvailable(startDate, s) : true;
 
     return (
       <Chip
+        key={s.id}
         value={s.id.toString()}
         disabled={disabled}
         styles={{ input: {display: 'block'}}} // necessary for a smooth transition
@@ -162,7 +132,7 @@ function BookingForm() {
         </Text>
       </Chip>
     );
-});
+  });
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
@@ -174,31 +144,36 @@ function BookingForm() {
         gap={0}
       >
         <DatePicker
-          {...form.getInputProps('date')}
+          type='range'
+          allowSingleDateInRange
+          value={form.values.dateRange}
           size='md'
           minDate={minDateTime.toDate()}
           maxDate={maxDateTime.toDate()}
           hideOutsideDates // Hide days from prev/next month
           maxLevel='month' // Disable month/year selection
-          excludeDate={DateUnavailable}
           onChange={(value) => {
-            // Update selected date
-            form.setFieldValue('date', value);
-            form.setFieldValue('slot', null);
+            form.setFieldValue('dateRange', value);
+            form.setFieldValue('slots', []);
           }}
           onDateChange={(date) => {
             setDate(date);
 
             // Reset the form values because a time slot availability is only
             // verifiable for the current month
-            form.setFieldValue('date', null);
-            form.setFieldValue('slot', null);
+            if (isOneDayRange) {
+              form.setFieldValue('dateRange', [startDate, null]);
+            }
+            form.setFieldValue('slots', []);
           }}
         />
 
         <ChipTransition
-          mounted={form.values.date !== null}
-          chipGroupProps={form.getInputProps('slot')}
+          mounted={isOneDayRange}
+          chipGroupProps={{
+            ...form.getInputProps('slots'),
+            multiple: true,
+          }}
           chips={chips}
         />
       </Flex>

@@ -1,11 +1,12 @@
-import { createLazyFileRoute } from '@tanstack/react-router';
+import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Divider, Timeline, Text, Stack } from '@mantine/core';
+import { Divider, Timeline, Text } from '@mantine/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import { AdminAppointmentsQueryOptions } from './index.queries';
+import { MainButton } from '../../components/MainButton';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -15,10 +16,17 @@ export const Route = createLazyFileRoute('/admin/')({
 })
 
 function AdminList() {
+  const navigate = useNavigate();
+
   const { data } = useQuery(AdminAppointmentsQueryOptions)
 
   return (
-    <Stack gap='md'>
+    <>
+      <MainButton
+        text='Blackout'
+        isActive={true}
+        callback={() => {navigate({ to: '/admin/blackout' })}}
+      />
       {data?.days.map((day) => (
         <div key={day.date}>
           <Divider
@@ -34,10 +42,10 @@ function AdminList() {
             }}
             styles={{label: {fontSize: 'var(--mantine-font-size-sm)'}}}
           />
-          <Timeline bulletSize={16} lineWidth={2} active={-1}>
+          <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
             {day.appointments.map((appt) => (
               <Timeline.Item key={appt.id}>
-                <Text truncate="end">
+                <Text truncate='end'>
                   {appt.userFullName ?? `User ${appt.userId}`}
                 </Text>
                 <Text
@@ -52,6 +60,6 @@ function AdminList() {
           </Timeline>
         </div>
       ))}
-    </Stack>
+    </>
   )
 }

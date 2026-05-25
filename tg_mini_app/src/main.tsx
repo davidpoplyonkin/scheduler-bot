@@ -6,7 +6,7 @@ import { StrictMode, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MantineProvider, createTheme } from '@mantine/core';
+import { MantineProvider, createTheme, type CSSVariablesResolver } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 
 // Import the generated route tree
@@ -78,13 +78,22 @@ function Root() {
     primaryShade: 7,
   });
 
+  const resolver: CSSVariablesResolver = (_theme) => ({
+  variables: {},
+  light: {},
+  dark: {
+    '--mantine-primary-color-light': 'var(--mantine-primary-color-8)',
+  },
+});
+
   return (
     <StrictMode>
       <MantineProvider
         theme={theme}
+        cssVariablesResolver={resolver}
         forceColorScheme={colorScheme}
       >
-        <Notifications position="top-center" /> 
+        <Notifications position='top-center' /> 
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
         </QueryClientProvider>

@@ -5,3 +5,4 @@ from .appointment import (AppointmentUserGetResponse, AppointmentReserveRequest,
 from .time_slot import ConstraintGetResponse
 from .block import (BlockUserGetRequest, BlockUserGetResponse, BlockOut,
                     BlockAggregateOut)
+from .blackout import BlackoutCreateRequest, BlackoutCreateResponse

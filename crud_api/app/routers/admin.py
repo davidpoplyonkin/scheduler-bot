@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 import datetime
 
-from schemas import Role, AppointmentAdminGetResponse
+from schemas import Role, AppointmentAdminGetResponse, BlackoutCreateRequest, BlackoutCreateResponse
 from deps import authorize_current_user, DBSessionDep
 import crud
 
@@ -40,3 +40,21 @@ async def get_appointments(
             for date, appts in sorted(appointments_by_date.items())
         ]
     )
+
+
+@router.post(
+    "/blackout",
+    dependencies=[Depends(authorize_current_user([Role.ADMIN]))],
+    response_model=BlackoutCreateResponse
+)
+async def create_blackout(
+    session: DBSessionDep,
+    request: BlackoutCreateRequest,
+) -> BlackoutCreateResponse:
+    created_count = await crud.create_blackouts(
+        session=session,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        slots=request.slots,
+    )
+    return BlackoutCreateResponse(created_count=created_count)

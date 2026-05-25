@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import router_auth, router_user, router_admin
+from routers import router_auth, router_user, router_admin, router_shared
 from config import API_ALLOW_ORIGINS
 
 app = FastAPI()
@@ -9,6 +9,7 @@ app = FastAPI()
 app.include_router(router_auth)
 app.include_router(router_user)
 app.include_router(router_admin)
+app.include_router(router_shared)
 
 # Add CORS middleware
 app.add_middleware(

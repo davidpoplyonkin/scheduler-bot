@@ -8,68 +8,83 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserIndexRouteImport } from './routes/user/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as UserBookingRouteImport } from './routes/user/booking'
-
-const AdminIndexLazyRouteImport = createFileRoute('/admin/')()
+import { Route as AdminBlackoutRouteImport } from './routes/admin/blackout'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminIndexLazyRoute = AdminIndexLazyRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/admin/index.lazy').then((d) => d.Route))
 const UserIndexRoute = UserIndexRouteImport.update({
   id: '/user/',
   path: '/user/',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/user/index.lazy').then((d) => d.Route))
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/admin/index.lazy').then((d) => d.Route))
 const UserBookingRoute = UserBookingRouteImport.update({
   id: '/user/booking',
   path: '/user/booking',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/user/booking.lazy').then((d) => d.Route))
+const AdminBlackoutRoute = AdminBlackoutRouteImport.update({
+  id: '/admin/blackout',
+  path: '/admin/blackout',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/admin/blackout.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/blackout': typeof AdminBlackoutRoute
   '/user/booking': typeof UserBookingRoute
+  '/admin/': typeof AdminIndexRoute
   '/user/': typeof UserIndexRoute
-  '/admin/': typeof AdminIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/blackout': typeof AdminBlackoutRoute
   '/user/booking': typeof UserBookingRoute
+  '/admin': typeof AdminIndexRoute
   '/user': typeof UserIndexRoute
-  '/admin': typeof AdminIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/blackout': typeof AdminBlackoutRoute
   '/user/booking': typeof UserBookingRoute
+  '/admin/': typeof AdminIndexRoute
   '/user/': typeof UserIndexRoute
-  '/admin/': typeof AdminIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/user/booking' | '/user/' | '/admin/'
+  fullPaths: '/' | '/admin/blackout' | '/user/booking' | '/admin/' | '/user/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/user/booking' | '/user' | '/admin'
-  id: '__root__' | '/' | '/user/booking' | '/user/' | '/admin/'
+  to: '/' | '/admin/blackout' | '/user/booking' | '/admin' | '/user'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin/blackout'
+    | '/user/booking'
+    | '/admin/'
+    | '/user/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminBlackoutRoute: typeof AdminBlackoutRoute
   UserBookingRoute: typeof UserBookingRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   UserIndexRoute: typeof UserIndexRoute
-  AdminIndexLazyRoute: typeof AdminIndexLazyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -81,18 +96,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexLazyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/user/': {
       id: '/user/'
       path: '/user'
       fullPath: '/user/'
       preLoaderRoute: typeof UserIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/user/booking': {
@@ -102,14 +117,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserBookingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/blackout': {
+      id: '/admin/blackout'
+      path: '/admin/blackout'
+      fullPath: '/admin/blackout'
+      preLoaderRoute: typeof AdminBlackoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminBlackoutRoute: AdminBlackoutRoute,
   UserBookingRoute: UserBookingRoute,
+  AdminIndexRoute: AdminIndexRoute,
   UserIndexRoute: UserIndexRoute,
-  AdminIndexLazyRoute: AdminIndexLazyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
