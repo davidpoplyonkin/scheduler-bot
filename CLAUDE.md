@@ -34,6 +34,8 @@ docker compose up    # All services (requires master-nginx-network)
   - `index.tsx` - Auth-based redirect (admin vs user)
   - `user/index.tsx` - Appointment list
   - `user/booking.tsx` - Booking form with date/time selection
+  - `admin/index.tsx` - Admin appointment list
+  - `admin/blackout.tsx` - Blackout form for blocking time slots
 - **State**: TanStack Query for server state, Mantine Form for form state
 - **API Client**: `src/services/crud.ts` - Axios with 401 interceptor for auto token refresh
 - **Auth**: `src/utils/auth.ts` - Exchanges Telegram InitData for JWT
@@ -64,3 +66,6 @@ Required in `.env`:
 - `IANA_TZ` - Timezone for date handling
 - `API_URL` / `API_ALLOW_ORIGINS` - CORS configuration
 - PostgreSQL credentials: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- `MIN_ADVANCE_MINUTES` - Minimum minutes before a slot can be booked
+- `MAX_ADVANCE_DAYS` - Maximum days in advance a slot can be booked
+- `FORBIDDEN_WEEKDAYS` - Comma-separated weekday numbers to block (default: `5,6` for Sat/Sun)
