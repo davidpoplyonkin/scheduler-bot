@@ -1,14 +1,16 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
 import { Chip, Flex, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { BlocksQueryOptions } from '../index.queries';
+import { CreateBlackoutMutationOptions } from './blackout.queries';
 import { MainButton } from '../../components/MainButton';
 import { ChipTransition } from '../../components/ChipTransition';
 import { timeSlotAvailable } from '../../utils/timeSlots';
@@ -20,8 +22,11 @@ export const Route = createLazyFileRoute('/admin/blackout')({
   component: BlackoutForm,
 })
 
+const tg = window.Telegram.WebApp;
+
 function BlackoutForm() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate();
 
   const { constraints } = Route.useLoaderData();
 
@@ -56,8 +61,30 @@ function BlackoutForm() {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = form.onSubmit(() => {
-    // TODO: Implement API call
+  const mutation = useMutation({
+    ...CreateBlackoutMutationOptions,
+    onSuccess: () => {
+      navigate({ to: '/admin' });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Blackout created successfully',
+        color: 'green',
+      });
+    },
+    onMutate: () => { tg.MainButton.showProgress() },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['blocks'] });
+      tg.MainButton.hideProgress();
+    },
+  });
+
+  const handleSubmit = form.onSubmit((values) => {
+    mutation.mutate({
+      startDate: values.dateRange[0]!,
+      endDate: values.dateRange[1]!,
+      slots: values.slots,
+    });
   });
 
   // Trigger submission on Telegram MainButton click

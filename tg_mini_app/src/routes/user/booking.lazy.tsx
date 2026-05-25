@@ -65,7 +65,6 @@ function BookingForm() {
     onSuccess: () => {
       // Ensure that the home page shows the new appointment
       queryClient.invalidateQueries({ queryKey: ['user-appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['blocks'] });
       navigate({ to: '/user' });
 
       // Show a success message
