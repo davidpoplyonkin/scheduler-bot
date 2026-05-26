@@ -1,4 +1,6 @@
 import os
+import hmac
+import hashlib
 
 IANA_TZ = os.getenv("IANA_TZ")
 
@@ -12,7 +14,12 @@ API_ALLOW_ORIGINS = os.getenv("API_ALLOW_ORIGINS").split(",")
 
 ADMIN_TG_ID = int(os.getenv("ADMIN_TG_ID"))
 TG_TOKEN = os.getenv("TG_TOKEN")
+QR_TOKEN = os.getenv("QR_TOKEN")
 INIT_DATA_EXP_SECONDS = 60 * 60 * 24 * 3
+
+# Pre-computed HMAC secret keys
+TG_SECRET_KEY = hmac.new(b"WebAppData", TG_TOKEN.encode(), hashlib.sha256).digest()
+QR_SECRET_KEY = hmac.new(b"ProofData", QR_TOKEN.encode(), hashlib.sha256).digest()
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_EXP_SECONDS = 60 * 60

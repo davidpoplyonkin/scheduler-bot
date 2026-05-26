@@ -113,3 +113,19 @@ async def get_admin_appointments(
 
     results = await session.execute(statement)
     return results.unique().scalars().all()
+
+
+async def get_appointment_with_user(
+    session: AsyncSession,
+    appointment_id: int,
+) -> Appointment | None:
+    statement = (
+        select(Appointment)
+        .options(
+            joinedload(Appointment.block).joinedload(Block.time_slot),
+            joinedload(Appointment.user)
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(statement)
+    return result.unique().scalar_one_or_none()

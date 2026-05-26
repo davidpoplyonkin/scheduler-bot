@@ -1,42 +1,120 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { Table } from '@mantine/core'
-import { useQuery } from '@tanstack/react-query'
+import { Timeline, Text, ActionIcon, Group, Modal, Box } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { IconQrcode } from '@tabler/icons-react'
+import { QRCode } from 'react-qr-code'
+import { useState, useEffect } from 'react'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 
-import { UserAppointmentsQueryOptions } from './index.queries'
-import { MainButton } from '../../components/MainButton'
+import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './index.queries'
+import { BottomButton } from '../../components/BottomButton'
+import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
+
+dayjs.extend(customParseFormat)
+dayjs.extend(utc)
 
 export const Route = createLazyFileRoute('/user/')({
   component: UserList,
-})
+});
+
+const tg = window.Telegram.WebApp;
 
 function UserList() {
+  useEffect(() => {
+    tg.SecondaryButton.hide();
+  }, []);
+
   const navigate = useNavigate();
 
   const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
 
-  const rows = appointments?.map((appointment) => (
-    <Table.Tr key={appointment.id}>
-      <Table.Td>{appointment.date}</Table.Td>
-      <Table.Td>{appointment.time}</Table.Td>
-    </Table.Tr>
-  ));
+  const [opened, { open, close }] = useDisclosure(false);
+  const [proofData, setProofData] = useState<ProofGenerateResponse | null>(null);
+
+  const [modalTitle, setModalTitle] = useState('');
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
+  const mutation = useMutation({
+    ...GenerateProofMutationOptions,
+    onSuccess: (data) => {
+      setProofData(data);
+      open();
+    },
+    onMutate: (data) => {
+      setLoadingId(data)
+    },
+    onSettled: (_data) => {
+      setLoadingId(null);
+    },
+    throwOnError: true,
+  });
 
   return (
     <>
-      <MainButton
+      <BottomButton
         text='Book'
         isActive={true}
         callback={() => {navigate({ to: '/user/booking' })}}
       />
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Date</Table.Th>
-            <Table.Th>Time</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
+      <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
+        {appointments?.map((appt) => {
+          const day = dayjs.utc(appt.date).format('ddd, MMM D');
+          const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
+
+          return <Timeline.Item key={appt.id}>
+            <Group justify='space-between' wrap='nowrap'>
+              <div>
+                <Text>{day}</Text>
+                <Text
+                  size='sm'
+                  c='dimmed'
+                  style={{ fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {time}
+                </Text>
+              </div>
+              <ActionIcon
+                variant='filled'
+                size='lg'
+                onClick={() => {
+                  mutation.mutate(appt.id);
+                  setModalTitle(`${day} at ${time}`);
+                }}
+                loading={loadingId === appt.id}
+              >
+                <IconQrcode
+                  stroke={2}
+                  style={{ width: '90%', height: '90%' }}
+                />
+              </ActionIcon>
+            </Group>
+          </Timeline.Item>
+        })}
+      </Timeline>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={modalTitle}
+        size='xs'
+        centered
+      >
+        <Box
+          data-autofocus // to prevent the close button from being auto-focused
+          tabIndex={-1}
+          style={{ outline: 'none' }}
+        >
+          <QRCode
+            value={JSON.stringify(proofData)}
+            size={256}
+            fgColor='var(--mantine-color-text)'
+            bgColor='transparent'
+            style={{ height: 'auto', width: '100%' }}
+          />
+        </Box>
+      </Modal>
     </>
   );
 }

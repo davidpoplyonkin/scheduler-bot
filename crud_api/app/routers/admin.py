@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from starlette import status
 import datetime
 
-from schemas import Role, AppointmentAdminGetResponse, BlackoutCreateRequest, BlackoutCreateResponse
+from schemas import (Role, AppointmentAdminGetResponse, BlackoutCreateRequest,
+                     BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse)
 from deps import authorize_current_user, DBSessionDep
+from utils import verify_init_data, InitDataInvalid, InitDataExpired
+from config import QR_SECRET_KEY
 import crud
 
 router = APIRouter(
@@ -58,3 +62,61 @@ async def create_blackout(
         slots=request.slots,
     )
     return BlackoutCreateResponse(created_count=created_count)
+
+
+@router.post(
+    "/proofs/verify",
+    dependencies=[Depends(authorize_current_user([Role.ADMIN]))],
+    response_model=ProofVerifyResponse
+)
+async def verify_proof(
+    session: DBSessionDep,
+    request: ProofVerifyRequest,
+) -> ProofVerifyResponse:
+    # Build data dict for verification (include hash)
+    data = {
+        "appointment_id": str(request.appointment_id),
+        "claimant_id": str(request.claimant_id),
+        "auth_date": request.auth_date,
+        "hash": request.hash,
+    }
+
+    # Verify HMAC and expiration
+    try:
+        verify_init_data(data, QR_SECRET_KEY)
+    except InitDataInvalid:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Invalid QR code signature",
+        )
+    except InitDataExpired:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="QR code has expired",
+        )
+
+    # Fetch and verify ownership
+    appointment = await crud.get_appointment_with_user(
+        session,
+        request.appointment_id
+    )
+
+    if appointment is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Appointment not found",
+        )
+
+    if appointment.user_id != request.claimant_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Appointment does not belong to this user",
+        )
+
+    # Success
+    return ProofVerifyResponse(
+        appointment_id=request.appointment_id,
+        user_name=appointment.user.full_name or f"User {appointment.user_id}",
+        appointment_date=appointment.block.date,
+        appointment_time=appointment.block.time_slot.start_time,
+    )

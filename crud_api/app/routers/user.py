@@ -2,10 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 import datetime
 
-from schemas import Role, AppointmentUserGetResponse, AppointmentReserveRequest, AppointmentReserveResponse, UserAuthSchema
+from schemas import (Role, AppointmentUserGetResponse,
+                     AppointmentReserveRequest, AppointmentReserveResponse,
+                     ProofGenerateRequest, ProofGenerateResponse,
+                     UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
-from utils import get_today_in_tz
-from config import MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS
+from utils import get_today_in_tz, get_init_data_hash
+from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
+                    QR_SECRET_KEY)
 import crud
 
 router = APIRouter(
@@ -66,4 +70,28 @@ async def reserve_appointment(
         id=appointment.id,
         date=appointment.block.date,
         time=appointment.block.time_slot.start_time
+    )
+
+@router.post("/proofs/generate", response_model=ProofGenerateResponse)
+async def generate_proof(
+    request: ProofGenerateRequest,
+    user: UserAuthSchema = Depends(authorize_current_user([Role.USER])),
+) -> ProofGenerateResponse:
+    # IMPORTANT: the hash is calculated with the keys in snake case, but the
+    # user receives those in camel case. That is why, the admin must send
+    # QR code data for verification as a JSON dict rather than a string, so that
+    # Pydantic could convert camel case back to snake case.
+    data = {
+        "appointment_id": request.appointment_id,
+        "claimant_id": user.id,
+        "auth_date": str(int(get_today_in_tz().timestamp())),
+    }
+
+    proof_hash = get_init_data_hash(data, QR_SECRET_KEY)
+
+    return ProofGenerateResponse(
+        appointment_id=request.appointment_id,
+        claimant_id=user.id,
+        auth_date=data["auth_date"],
+        hash=proof_hash,
     )
