@@ -4,13 +4,13 @@ import { useDisclosure } from '@mantine/hooks'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { IconQrcode } from '@tabler/icons-react'
 import { QRCode } from 'react-qr-code'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './index.queries'
-import { MainButton } from '../../components/MainButton'
+import { BottomButton } from '../../components/BottomButton'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
 
 dayjs.extend(customParseFormat)
@@ -20,7 +20,13 @@ export const Route = createLazyFileRoute('/user/')({
   component: UserList,
 });
 
+const tg = window.Telegram.WebApp;
+
 function UserList() {
+  useEffect(() => {
+    tg.SecondaryButton.hide();
+  }, []);
+
   const navigate = useNavigate();
 
   const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
@@ -48,7 +54,7 @@ function UserList() {
 
   return (
     <>
-      <MainButton
+      <BottomButton
         text='Book'
         isActive={true}
         callback={() => {navigate({ to: '/user/booking' })}}

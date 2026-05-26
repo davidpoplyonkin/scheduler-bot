@@ -3,7 +3,7 @@ import { Chip, Flex, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { BlocksQueryOptions } from '../index.queries';
 import { CreateBlackoutMutationOptions } from './blackout.queries';
-import { MainButton } from '../../components/MainButton';
+import { BottomButton } from '../../components/BottomButton';
 import { ChipTransition } from '../../components/ChipTransition';
 import { timeSlotAvailable } from '../../utils/timeSlots';
 
@@ -25,6 +25,10 @@ export const Route = createLazyFileRoute('/admin/blackout')({
 const tg = window.Telegram.WebApp;
 
 function BlackoutForm() {
+  useEffect(() => {
+    tg.SecondaryButton.hide();
+  }, []);
+
   const queryClient = useQueryClient()
   const navigate = useNavigate();
 
@@ -87,7 +91,7 @@ function BlackoutForm() {
     });
   });
 
-  // Trigger submission on Telegram MainButton click
+  // Trigger submission on Telegram BottomButton click
   const triggerSubmit = () => {
     if (formRef.current) {
       formRef.current.requestSubmit();
@@ -136,7 +140,7 @@ function BlackoutForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
-      <MainButton text='Submit' isActive={formValid} callback={triggerSubmit} />
+      <BottomButton text='Submit' isActive={formValid} callback={triggerSubmit} />
       <Flex
         direction={{ base: 'column', xs: 'row' }}
         align='center'

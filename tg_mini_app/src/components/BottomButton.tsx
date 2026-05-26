@@ -5,39 +5,47 @@ import { useThemeStore } from '../stores/ThemeStore';
 
 const tg = window.Telegram.WebApp;
 
-interface MainButtonProps {
+interface BottomButtonProps {
+  type?: 'main' | 'secondary';
   text: string;
   isActive: boolean;
   callback: () => void;
 }
 
-export function MainButton({ text, isActive, callback }: MainButtonProps) {
-  useEffect(() => {
-    tg.MainButton.setText(text);
-    tg.MainButton.show();
+export function BottomButton({
+  type = 'main',
+  text,
+  isActive,
+  callback,
+}: BottomButtonProps) {
+  const button = type === 'main' ? tg.MainButton : tg.SecondaryButton;
 
-    const handleMainButtonClick = () => {
+  useEffect(() => {
+    button.setText(text);
+    button.show();
+
+    const handleButtonClick = () => {
       callback();
     };
 
-    tg.MainButton.onClick(handleMainButtonClick);
+    button.onClick(handleButtonClick);
 
     return () => {
-      tg.MainButton.offClick(handleMainButtonClick);
+      button.offClick(handleButtonClick);
     };
   }, []);
 
   const theme = useThemeStore();
   useEffect(() => {
-    const updateMainButton = async () => {
+    const updateButton = async () => {
       if (isActive) {
-        tg.MainButton.setParams({
+        button.setParams({
           is_active: true,
           color: await resolveCssVar('--mantine-primary-color-filled'),
           text_color: await resolveCssVar('--mantine-primary-color-contrast'),
         });
       } else {
-        tg.MainButton.setParams({
+        button.setParams({
           is_active: false,
           color: await resolveCssVar('--mantine-color-disabled'),
           text_color: await resolveCssVar('--mantine-color-disabled-color'),
@@ -45,7 +53,7 @@ export function MainButton({ text, isActive, callback }: MainButtonProps) {
       }
     };
 
-    updateMainButton();
+    updateButton();
   }, [isActive, theme]);
 
   return null;

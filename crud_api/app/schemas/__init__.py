@@ -6,4 +6,4 @@ from .time_slot import ConstraintGetResponse
 from .block import (BlockUserGetRequest, BlockUserGetResponse, BlockOut,
                     BlockAggregateOut)
 from .blackout import BlackoutCreateRequest, BlackoutCreateResponse
-from .proof import ProofGenerateRequest, ProofGenerateResponse
+from .proof import ProofGenerateRequest, ProofGenerateResponse, ProofVerifyRequest, ProofVerifyResponse

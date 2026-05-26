@@ -77,6 +77,10 @@ async def generate_proof(
     request: ProofGenerateRequest,
     user: UserAuthSchema = Depends(authorize_current_user([Role.USER])),
 ) -> ProofGenerateResponse:
+    # IMPORTANT: the hash is calculated with the keys in snake case, but the
+    # user receives those in camel case. That is why, the admin must send
+    # QR code data for verification as a JSON dict rather than a string, so that
+    # Pydantic could convert camel case back to snake case.
     data = {
         "appointment_id": request.appointment_id,
         "claimant_id": user.id,
