@@ -1,13 +1,17 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { Timeline, Text, ActionIcon, Group } from '@mantine/core'
-import { useQuery } from '@tanstack/react-query'
+import { Timeline, Text, ActionIcon, Group, Modal, Box } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { IconQrcode } from '@tabler/icons-react'
+import { QRCode } from 'react-qr-code'
+import { useState } from 'react'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
-import { UserAppointmentsQueryOptions } from './index.queries'
+import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './index.queries'
 import { MainButton } from '../../components/MainButton'
+import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
 
 dayjs.extend(customParseFormat)
 dayjs.extend(utc)
@@ -21,6 +25,27 @@ function UserList() {
 
   const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
 
+  const [opened, { open, close }] = useDisclosure(false);
+  const [proofData, setProofData] = useState<ProofGenerateResponse | null>(null);
+
+  const [modalTitle, setModalTitle] = useState('');
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
+  const mutation = useMutation({
+    ...GenerateProofMutationOptions,
+    onSuccess: (data) => {
+      setProofData(data);
+      open();
+    },
+    onMutate: (data) => {
+      setLoadingId(data)
+    },
+    onSettled: (_data) => {
+      setLoadingId(null);
+    },
+    throwOnError: true,
+  });
+
   return (
     <>
       <MainButton
@@ -29,20 +54,31 @@ function UserList() {
         callback={() => {navigate({ to: '/user/booking' })}}
       />
       <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
-        {appointments?.map((appt) => (
-          <Timeline.Item key={appt.id}>
-            <Group justify="space-between" wrap="nowrap">
+        {appointments?.map((appt) => {
+          const day = dayjs.utc(appt.date).format('ddd, MMM D');
+          const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
+
+          return <Timeline.Item key={appt.id}>
+            <Group justify='space-between' wrap='nowrap'>
               <div>
-                <Text>{dayjs.utc(appt.date).format('ddd, MMM D')}</Text>
+                <Text>{day}</Text>
                 <Text
                   size='sm'
                   c='dimmed'
                   style={{ fontVariantNumeric: 'tabular-nums' }}
                 >
-                  {dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm')}
+                  {time}
                 </Text>
               </div>
-              <ActionIcon variant='filled' size='lg'>
+              <ActionIcon
+                variant='filled'
+                size='lg'
+                onClick={() => {
+                  mutation.mutate(appt.id);
+                  setModalTitle(`${day} at ${time}`);
+                }}
+                loading={loadingId === appt.id}
+              >
                 <IconQrcode
                   stroke={2}
                   style={{ width: '90%', height: '90%' }}
@@ -50,8 +86,29 @@ function UserList() {
               </ActionIcon>
             </Group>
           </Timeline.Item>
-        ))}
+        })}
       </Timeline>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={modalTitle}
+        size='xs'
+        centered
+      >
+        <Box
+          data-autofocus // to prevent the close button from being auto-focused
+          tabIndex={-1}
+          style={{ outline: 'none' }}
+        >
+          <QRCode
+            value={JSON.stringify(proofData)}
+            size={256}
+            fgColor='var(--mantine-color-text)'
+            bgColor='transparent'
+            style={{ height: 'auto', width: '100%' }}
+          />
+        </Box>
+      </Modal>
     </>
   );
 }

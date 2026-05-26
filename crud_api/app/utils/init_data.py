@@ -4,10 +4,11 @@ import hmac
 import hashlib
 from time import time
 
-from config import TG_TOKEN, INIT_DATA_EXP_SECONDS
+from config import TG_SECRET_KEY, INIT_DATA_EXP_SECONDS
 
 def get_init_data_hash(
-    data: dict[str, str], # without "hash" key
+    data: dict[str, str],
+    secret_key: bytes,
 ) -> str:
     # https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 
@@ -16,17 +17,10 @@ def get_init_data_hash(
         f"{k}={v}" for k, v in sorted(data.items())
     )
 
-    # Derive the key used by Telegram
-    secret_key = hmac.new(
-        b"WebAppData", 
-        TG_TOKEN.encode(), 
-        hashlib.sha256
-    ).digest()
-
     # Calculate the authentic hash
     hash = hmac.new(
-        secret_key, 
-        check_string.encode(), 
+        secret_key,
+        check_string.encode(),
         hashlib.sha256
     ).hexdigest()
 
@@ -50,7 +44,7 @@ def verify_init_data(
     except KeyError:
         raise init_data_invalid
 
-    authentic_hash = get_init_data_hash(data)
+    authentic_hash = get_init_data_hash(data, TG_SECRET_KEY)
 
     # Ensure that the hashes match
     if not hmac.compare_digest(authentic_hash, init_data_hash):
