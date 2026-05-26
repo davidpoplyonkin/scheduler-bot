@@ -52,6 +52,18 @@ docker compose up    # All services (requires master-nginx-network)
 3. Subsequent requests include JWT via cookies
 4. On 401, frontend interceptor re-authenticates and retries
 
+### QR Proof Verification
+Users can generate signed QR codes for appointments, which admins scan to verify:
+1. User clicks QR icon → `POST /user/proofs/generate` returns HMAC-signed payload
+2. Admin uses Telegram's native QR scanner (Secondary Button) → scans QR
+3. `POST /admin/proofs/verify` validates signature, expiration, and ownership
+4. Signing uses `QR_SECRET_KEY` derived from `QR_TOKEN` env var (separate from `TG_TOKEN`)
+
+**Key files:**
+- `app/utils/init_data.py` - `verify_init_data()` with custom exceptions (`InitDataInvalid`, `InitDataExpired`)
+- `app/schemas/proof.py` - Request/response schemas for generate and verify
+- `src/components/BottomButton.tsx` - Unified Main/Secondary button component
+
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
 - `Appointment` = user assigned to a block
@@ -61,6 +73,7 @@ docker compose up    # All services (requires master-nginx-network)
 
 Required in `.env`:
 - `TG_TOKEN` - Telegram bot token (for InitData verification)
+- `QR_TOKEN` - Secret for signing QR proof payloads
 - `JWT_SECRET` - JWT signing key
 - `ADMIN_TG_ID` - Telegram user ID for admin role
 - `IANA_TZ` - Timezone for date handling
