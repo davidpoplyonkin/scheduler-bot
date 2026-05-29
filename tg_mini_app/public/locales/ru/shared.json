@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "submit": "Отправить"
+  },
+  "notifications": {
+    "success": "Успешно"
+  },
+  "datetime": {
+    "at": "в"
+  },
+  "screens": {
+    "loading": "Загрузка...",
+    "error": "Критическая ошибка",
+    "noAppointments": "Записей пока нет"
+  }
+}

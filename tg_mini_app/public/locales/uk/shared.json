@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "submit": "Надіслати"
+  },
+  "notifications": {
+    "success": "Успішно"
+  },
+  "datetime": {
+    "at": "о"
+  },
+  "screens": {
+    "loading": "Завантаження...",
+    "error": "Критична помилка",
+    "noAppointments": "Записів ще немає"
+  }
+}

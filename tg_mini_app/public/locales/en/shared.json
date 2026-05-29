@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "submit": "Submit"
+  },
+  "notifications": {
+    "success": "Success"
+  },
+  "datetime": {
+    "at": "at"
+  },
+  "screens": {
+    "loading": "Loading...",
+    "error": "Fatal error",
+    "noAppointments": "No scheduled appointments yet"
+  }
+}

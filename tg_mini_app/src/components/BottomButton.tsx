@@ -43,12 +43,14 @@ export function BottomButton({
           is_active: true,
           color: await resolveCssVar('--mantine-primary-color-filled'),
           text_color: await resolveCssVar('--mantine-primary-color-contrast'),
+          position: 'top'
         });
       } else {
         button.setParams({
           is_active: false,
           color: await resolveCssVar('--mantine-color-disabled'),
           text_color: await resolveCssVar('--mantine-color-disabled-color'),
+          position: 'top'
         });
       }
     };

@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "blackout": "Blackout",
+    "scanQr": "Scan QR"
+  },
+  "validation": {
+    "dateRangeRequired": "Date range is required"
+  },
+  "notifications": {
+    "blackoutCreated": "Blackout created successfully",
+    "verificationFailedTitle": "Verification failed",
+    "verificationFailed": "Expired or invalid QR",
+    "invalidQrTitle": "Invalid QR",
+    "invalidQrMessage": "Could not parse QR code"
+  },
+  "qrScanner": {
+    "scanPrompt": "Scan appointment QR"
+  },
+  "user": {
+    "fallbackName": "User {{userId}}"
+  }
+}

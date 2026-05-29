@@ -4,6 +4,7 @@ import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -25,6 +26,8 @@ export const Route = createLazyFileRoute('/admin/blackout')({
 const tg = window.Telegram.WebApp;
 
 function BlackoutForm() {
+  const { t } = useTranslation(['admin', 'shared']);
+
   useEffect(() => {
     tg.SecondaryButton.hide();
   }, []);
@@ -57,7 +60,7 @@ function BlackoutForm() {
     },
     validate: {
       dateRange: (value) => {
-        if (!value[0] || !value[1]) return 'Date range is required';
+        if (!value[0] || !value[1]) return t('validation.dateRangeRequired', { ns: 'admin' });
         return null;
       },
     },
@@ -71,8 +74,8 @@ function BlackoutForm() {
       navigate({ to: '/admin' });
 
       notifications.show({
-        title: 'Success',
-        message: 'Blackout created successfully',
+        title: t('notifications.success', { ns: 'shared' }),
+        message: t('notifications.blackoutCreated', { ns: 'admin' }),
         color: 'green',
       });
     },
@@ -140,7 +143,11 @@ function BlackoutForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
-      <BottomButton text='Submit' isActive={formValid} callback={triggerSubmit} />
+      <BottomButton
+        text={t('buttons.submit', { ns: 'shared' })}
+        isActive={formValid}
+        callback={triggerSubmit}
+      />
       <Flex
         direction={{ base: 'column', xs: 'row' }}
         align='center'

@@ -1,0 +1,14 @@
+{
+  "buttons": {
+    "book": "Book"
+  },
+  "validation": {
+    "dateRequired": "Date is required",
+    "timeSlotRequired": "Time slot is required"
+  },
+  "notifications": {
+    "appointmentBooked": "The appointment was booked successfully",
+    "slotUnavailableTitle": "Slot unavailable",
+    "slotUnavailable": "The chosen time slot is no longer available"
+  }
+}

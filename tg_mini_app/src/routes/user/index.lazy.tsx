@@ -5,13 +5,16 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { IconQrcode } from '@tabler/icons-react'
 import { QRCode } from 'react-qr-code'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './index.queries'
 import { BottomButton } from '../../components/BottomButton'
+import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
+import SearchingIcon from '../../assets/Searching.svg?react'
 
 dayjs.extend(customParseFormat)
 dayjs.extend(utc)
@@ -23,6 +26,8 @@ export const Route = createLazyFileRoute('/user/')({
 const tg = window.Telegram.WebApp;
 
 function UserList() {
+  const { t } = useTranslation(['user', 'shared']);
+
   useEffect(() => {
     tg.SecondaryButton.hide();
   }, []);
@@ -55,45 +60,51 @@ function UserList() {
   return (
     <>
       <BottomButton
-        text='Book'
+        text={t('buttons.book', { ns: 'user' })}
         isActive={true}
         callback={() => {navigate({ to: '/user/booking' })}}
       />
-      <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
-        {appointments?.map((appt) => {
-          const day = dayjs.utc(appt.date).format('ddd, MMM D');
-          const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
+      {appointments?.length === 0 ? (
+        <EmptyState text={t('screens.noAppointments', { ns: 'shared' })}>
+          <SearchingIcon height={128} fill='var(--mantine-color-dimmed)' />
+        </EmptyState>
+      ) : (
+        <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
+          {appointments?.map((appt) => {
+            const day = dayjs.utc(appt.date).format('dd, MMM D');
+            const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
 
-          return <Timeline.Item key={appt.id}>
-            <Group justify='space-between' wrap='nowrap'>
-              <div>
-                <Text>{day}</Text>
-                <Text
-                  size='sm'
-                  c='dimmed'
-                  style={{ fontVariantNumeric: 'tabular-nums' }}
+            return <Timeline.Item key={appt.id}>
+              <Group justify='space-between' wrap='nowrap'>
+                <div>
+                  <Text>{day}</Text>
+                  <Text
+                    size='sm'
+                    c='dimmed'
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {time}
+                  </Text>
+                </div>
+                <ActionIcon
+                  variant='filled'
+                  size='lg'
+                  onClick={() => {
+                    mutation.mutate(appt.id);
+                    setModalTitle(`${day} ${t('datetime.at', { ns: 'shared' })} ${time}`);
+                  }}
+                  loading={loadingId === appt.id}
                 >
-                  {time}
-                </Text>
-              </div>
-              <ActionIcon
-                variant='filled'
-                size='lg'
-                onClick={() => {
-                  mutation.mutate(appt.id);
-                  setModalTitle(`${day} at ${time}`);
-                }}
-                loading={loadingId === appt.id}
-              >
-                <IconQrcode
-                  stroke={2}
-                  style={{ width: '90%', height: '90%' }}
-                />
-              </ActionIcon>
-            </Group>
-          </Timeline.Item>
-        })}
-      </Timeline>
+                  <IconQrcode
+                    stroke={2}
+                    style={{ width: '90%', height: '90%' }}
+                  />
+                </ActionIcon>
+              </Group>
+            </Timeline.Item>
+          })}
+        </Timeline>
+      )}
       <Modal
         opened={opened}
         onClose={close}
