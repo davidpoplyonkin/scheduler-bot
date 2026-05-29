@@ -1,0 +1,14 @@
+{
+  "buttons": {
+    "book": "Записатися"
+  },
+  "validation": {
+    "dateRequired": "Оберіть дату",
+    "timeSlotRequired": "Оберіть час"
+  },
+  "notifications": {
+    "appointmentBooked": "Запис успішно створено",
+    "slotUnavailableTitle": "Слот недоступний",
+    "slotUnavailable": "Обраний час більше недоступний"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "blackout": "Блекаут",
+    "scanQr": "Сканувати QR"
+  },
+  "validation": {
+    "dateRangeRequired": "Оберіть діапазон дат"
+  },
+  "notifications": {
+    "blackoutCreated": "Слоти успішно закрито",
+    "verificationFailedTitle": "Помилка перевірки",
+    "verificationFailed": "Прострочений або недійсний QR-код",
+    "invalidQrTitle": "Невірний QR",
+    "invalidQrMessage": "Не вдалося прочитати QR-код"
+  },
+  "qrScanner": {
+    "scanPrompt": "Скануйте QR-код запису"
+  },
+  "user": {
+    "fallbackName": "Користувач {{userId}}"
+  }
+}

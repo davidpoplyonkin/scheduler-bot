@@ -1,0 +1,22 @@
+{
+  "buttons": {
+    "blackout": "Блэкаут",
+    "scanQr": "Сканировать QR"
+  },
+  "validation": {
+    "dateRangeRequired": "Выберите диапазон дат"
+  },
+  "notifications": {
+    "blackoutCreated": "Слоты успешно закрыты",
+    "verificationFailedTitle": "Ошибка проверки",
+    "verificationFailed": "Просроченный или недействительный QR-код",
+    "invalidQrTitle": "Неверный QR",
+    "invalidQrMessage": "Не удалось прочитать QR-код"
+  },
+  "qrScanner": {
+    "scanPrompt": "Сканируйте QR-код записи"
+  },
+  "user": {
+    "fallbackName": "Пользователь {{userId}}"
+  }
+}

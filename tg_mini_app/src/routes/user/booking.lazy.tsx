@@ -4,6 +4,7 @@ import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -26,6 +27,8 @@ export const Route = createLazyFileRoute('/user/booking')({
 const tg = window.Telegram.WebApp;
 
 function BookingForm() {
+  const { t } = useTranslation(['user', 'shared']);
+
   useEffect(() => {
     tg.SecondaryButton.hide();
   }, []);
@@ -57,8 +60,8 @@ function BookingForm() {
       slot: null as number | null,
     },
     validate: {
-      date: (value) => (value ? null : 'Date is required'),
-      slot: (value) => (value ? null : 'Time slot is required'),
+      date: (value) => (value ? null : t('validation.dateRequired', { ns: 'user' })),
+      slot: (value) => (value ? null : t('validation.timeSlotRequired', { ns: 'user' })),
     },
   });
 
@@ -73,8 +76,8 @@ function BookingForm() {
 
       // Show a success message
       notifications.show({
-        title: 'Success',
-        message: 'The appointment was booked successfully',
+        title: t('notifications.success', { ns: 'shared' }),
+        message: t('notifications.appointmentBooked', { ns: 'user' }),
         color: 'green',
       });
     },
@@ -91,8 +94,8 @@ function BookingForm() {
       if (error instanceof AxiosError && error.response?.status === 409) {
         // Show an error message
         notifications.show({
-          title: 'Slot unavailable',
-          message: 'The chosen time slot is no longer available',
+          title: t('notifications.slotUnavailableTitle', { ns: 'user' }),
+          message: t('notifications.slotUnavailable', { ns: 'user' }),
           color: 'red',
         });
 
@@ -170,7 +173,11 @@ function BookingForm() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
-      <BottomButton text='Submit' isActive={formValid} callback={triggerSubmit} />
+      <BottomButton
+        text={t('buttons.submit', { ns: 'shared' })}
+        isActive={formValid}
+        callback={triggerSubmit}
+      />
       <Flex
         direction={{ base: 'column', xs: 'row' }}
         align='center'
