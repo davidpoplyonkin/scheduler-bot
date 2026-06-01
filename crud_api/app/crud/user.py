@@ -5,6 +5,10 @@ from sqlalchemy.dialects.postgresql import insert
 
 from models import User
 
+async def get_user(session: AsyncSession, user_id: int) -> User | None:
+    return await session.get(User, user_id)
+
+
 async def upsert_user(
     session: AsyncSession,
     tg_id: int,

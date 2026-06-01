@@ -7,6 +7,7 @@ services:
       - MIN_ADVANCE_MINUTES=${MIN_ADVANCE_MINUTES}
       - MAX_ADVANCE_DAYS=${MAX_ADVANCE_DAYS}
       - FORBIDDEN_WEEKDAYS=${FORBIDDEN_WEEKDAYS}
+      - NOTIFICATION_DELETE_SECONDS=${NOTIFICATION_DELETE_SECONDS}
       - API_ALLOW_ORIGINS=${API_ALLOW_ORIGINS}
       - ADMIN_TG_ID=${ADMIN_TG_ID}
       - TG_TOKEN=${TG_TOKEN}
@@ -15,8 +16,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - postgres
+      - redis
     networks:
       - internal
   tg-mini-app:
@@ -38,6 +41,15 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     networks:
       - internal
+  redis:
+    image: redis:7.4-alpine
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD} 
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
   nginx:
     hostname: scheduler-nginx
     image: nginx:1.29.8-alpine
@@ -52,6 +64,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   internal:
