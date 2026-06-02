@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
+import asyncio
 import datetime
 
 from schemas import (Role, AppointmentUserGetResponse,
@@ -67,10 +68,10 @@ async def reserve_appointment(
         request.time_slot_id
     )
 
-    await create_calendar_event(
+    asyncio.create_task(create_calendar_event(
         event_date=appointment.block.date,
         event_time=appointment.block.time_slot.start_time,
-    )
+    ))
 
     admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
     lang = admin.language_code if admin else None
@@ -80,7 +81,7 @@ async def reserve_appointment(
     )
 
     # Notify the admin in Telegram about the new booking
-    await send_notification(
+    asyncio.create_task(send_notification(
         ADMIN_TG_ID,
         (
             f"*{t('New booking:', lang)}*\n"
@@ -88,7 +89,7 @@ async def reserve_appointment(
             f"{t('at', lang)} {time_str}"
         ),
         parse_mode="MarkdownV2"
-    )
+    ))
 
     return AppointmentReserveResponse(
         id=appointment.id,
