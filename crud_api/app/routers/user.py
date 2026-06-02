@@ -7,7 +7,8 @@ from schemas import (Role, AppointmentUserGetResponse,
                      ProofGenerateRequest, ProofGenerateResponse,
                      UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
-from utils import get_today_in_tz, get_init_data_hash, send_notification
+from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
+                   format_date, escape_markdownv2)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, ADMIN_TG_ID)
 import crud
@@ -66,15 +67,19 @@ async def reserve_appointment(
         request.time_slot_id
     )
 
-    user_info = await crud.get_user(session, user.id)
-    user_name = user_info.full_name if user_info else "Unknown user"
+    admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
+    lang = admin.language_code if admin else None
+    date_str = escape_markdownv2(format_date(appointment.block.date, lang))
+    time_str = escape_markdownv2(
+        appointment.block.time_slot.start_time.strftime("%H:%M")
+    )
 
     await send_notification(
         ADMIN_TG_ID,
         (
-            f"*New booking:* {user_name} "
-            #f"on {appointment.block.date} "
-            #f"at {appointment.block.time_slot.start_time}"
+            f"*{t('New booking:', lang)}*\n"
+            f"{date_str} "
+            f"{t('at', lang)} {time_str}"
         ),
         parse_mode="MarkdownV2"
     )

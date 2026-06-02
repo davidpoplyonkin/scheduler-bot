@@ -14,3 +14,4 @@ class User(Base):
         nullable=False
     )
     full_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    language_code: Mapped[str | None] = mapped_column(String(8), nullable=True)

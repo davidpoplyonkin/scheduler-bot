@@ -47,8 +47,9 @@ async def issue_token(
 
     names = [n for k in ["first_name", "last_name"] if (n := user_dict.get(k))]
     full_name = " ".join(names) or None
-    
-    user = await upsert_user(session, tg_id, full_name)
+    language_code = user_dict.get("language_code")
+
+    user = await upsert_user(session, tg_id, full_name, language_code)
 
     role = Role.ADMIN if tg_id == ADMIN_TG_ID else Role.USER
     
