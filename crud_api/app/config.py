@@ -34,3 +34,8 @@ DATABASE_URL = f"postgresql+asyncpg://{PG_USER}:{PG_PASSWORD}@postgres/{PG_DB}"
 ALEMBIC_DATABASE_URL = f"postgresql://{PG_USER}:{PG_PASSWORD}@postgres/{PG_DB}"
 
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+# Google Calendar Integration
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH = "/run/secrets/google-key"
+ADMIN_GOOGLE_EMAIL = os.getenv("ADMIN_GOOGLE_EMAIL")
+BOT_NAME = os.getenv("BOT_NAME", "Scheduler Bot")

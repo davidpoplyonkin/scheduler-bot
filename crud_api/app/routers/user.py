@@ -8,7 +8,7 @@ from schemas import (Role, AppointmentUserGetResponse,
                      UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
-                   format_date, escape_markdownv2)
+                   format_date, escape_markdownv2, create_calendar_event)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, ADMIN_TG_ID)
 import crud
@@ -67,6 +67,11 @@ async def reserve_appointment(
         request.time_slot_id
     )
 
+    await create_calendar_event(
+        event_date=appointment.block.date,
+        event_time=appointment.block.time_slot.start_time,
+    )
+
     admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
     lang = admin.language_code if admin else None
     date_str = escape_markdownv2(format_date(appointment.block.date, lang))
@@ -74,6 +79,7 @@ async def reserve_appointment(
         appointment.block.time_slot.start_time.strftime("%H:%M")
     )
 
+    # Notify the admin in Telegram about the new booking
     await send_notification(
         ADMIN_TG_ID,
         (
