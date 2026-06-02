@@ -1,12 +1,10 @@
 import asyncio
 import logging
 from datetime import datetime, date, time, timedelta
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from config import (
     GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
@@ -32,7 +30,7 @@ def _create_event_sync(
     event_date: date,
     event_time: time,
     duration_minutes: int
-) -> Optional[str]:
+) -> str | None:
     service = _get_calendar_service()
 
     tz = ZoneInfo(IANA_TZ)
@@ -62,8 +60,8 @@ def _create_event_sync(
 async def create_calendar_event(
     event_date: date,
     event_time: time,
-    duration_minutes: int = 60,
-) -> Optional[str]:
+    duration_minutes: int,
+) -> str | None:
     """
     Create a Google Calendar event for an appointment.
     """

@@ -11,7 +11,7 @@ from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
                    format_date, escape_markdownv2, create_calendar_event)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
-                    QR_SECRET_KEY, ADMIN_TG_ID)
+                    QR_SECRET_KEY, ADMIN_TG_ID, APPOINTMENT_DURATION_MINUTES)
 import crud
 
 router = APIRouter(
@@ -71,6 +71,7 @@ async def reserve_appointment(
     asyncio.create_task(create_calendar_event(
         event_date=appointment.block.date,
         event_time=appointment.block.time_slot.start_time,
+        duration_minutes=APPOINTMENT_DURATION_MINUTES
     ))
 
     admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
