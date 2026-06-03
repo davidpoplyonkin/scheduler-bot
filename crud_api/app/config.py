@@ -10,6 +10,7 @@ FORBIDDEN_WEEKDAYS = [
     int(d) for d in os.getenv("FORBIDDEN_WEEKDAYS", "5,6").split(",")
 ]
 NOTIFICATION_DELETE_SECONDS = int(os.getenv("NOTIFICATION_DELETE_SECONDS"))
+APPOINTMENT_DURATION_MINUTES = int(os.getenv("APPOINTMENT_DURATION_MINUTES"))
 
 API_ALLOW_ORIGINS = os.getenv("API_ALLOW_ORIGINS").split(",")
 
@@ -34,3 +35,8 @@ DATABASE_URL = f"postgresql+asyncpg://{PG_USER}:{PG_PASSWORD}@postgres/{PG_DB}"
 ALEMBIC_DATABASE_URL = f"postgresql://{PG_USER}:{PG_PASSWORD}@postgres/{PG_DB}"
 
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+# Google Calendar Integration
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH = "/run/secrets/google-key"
+ADMIN_GOOGLE_EMAIL = os.getenv("ADMIN_GOOGLE_EMAIL")
+BOT_NAME = os.getenv("BOT_NAME", "Scheduler Bot")

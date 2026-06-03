@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
+import asyncio
 import datetime
 
 from schemas import (Role, AppointmentUserGetResponse,
@@ -8,9 +9,9 @@ from schemas import (Role, AppointmentUserGetResponse,
                      UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
-                   format_date, escape_markdownv2)
+                   format_date, escape_markdownv2, create_calendar_event)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
-                    QR_SECRET_KEY, ADMIN_TG_ID)
+                    QR_SECRET_KEY, ADMIN_TG_ID, APPOINTMENT_DURATION_MINUTES)
 import crud
 
 router = APIRouter(
@@ -67,6 +68,12 @@ async def reserve_appointment(
         request.time_slot_id
     )
 
+    asyncio.create_task(create_calendar_event(
+        event_date=appointment.block.date,
+        event_time=appointment.block.time_slot.start_time,
+        duration_minutes=APPOINTMENT_DURATION_MINUTES
+    ))
+
     admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
     lang = admin.language_code if admin else None
     date_str = escape_markdownv2(format_date(appointment.block.date, lang))
@@ -74,7 +81,8 @@ async def reserve_appointment(
         appointment.block.time_slot.start_time.strftime("%H:%M")
     )
 
-    await send_notification(
+    # Notify the admin in Telegram about the new booking
+    asyncio.create_task(send_notification(
         ADMIN_TG_ID,
         (
             f"*{t('New booking:', lang)}*\n"
@@ -82,7 +90,7 @@ async def reserve_appointment(
             f"{t('at', lang)} {time_str}"
         ),
         parse_mode="MarkdownV2"
-    )
+    ))
 
     return AppointmentReserveResponse(
         id=appointment.id,

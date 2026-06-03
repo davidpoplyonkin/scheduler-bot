@@ -2,12 +2,15 @@ services:
   crud-api:
     build:
       context: ./crud_api
+    secrets:
+      - google-key
     environment:
       - IANA_TZ=${IANA_TZ}
       - MIN_ADVANCE_MINUTES=${MIN_ADVANCE_MINUTES}
       - MAX_ADVANCE_DAYS=${MAX_ADVANCE_DAYS}
       - FORBIDDEN_WEEKDAYS=${FORBIDDEN_WEEKDAYS}
       - NOTIFICATION_DELETE_SECONDS=${NOTIFICATION_DELETE_SECONDS}
+      - APPOINTMENT_DURATION_MINUTES=${APPOINTMENT_DURATION_MINUTES}
       - API_ALLOW_ORIGINS=${API_ALLOW_ORIGINS}
       - ADMIN_TG_ID=${ADMIN_TG_ID}
       - TG_TOKEN=${TG_TOKEN}
@@ -17,6 +20,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ADMIN_GOOGLE_EMAIL=${ADMIN_GOOGLE_EMAIL}
+      - BOT_NAME=${BOT_NAME}
     depends_on:
       - postgres
       - redis
@@ -70,3 +75,7 @@ networks:
   internal:
   master-nginx-network:
     external: true
+
+secrets:
+  google-key:
+    file: ./google-key.json
