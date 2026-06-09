@@ -25,8 +25,10 @@ async def get_constraints(
     Return business rules required to render the date picker
     """
     time_slots = await crud.get_time_slots(session)
+    services = await crud.get_services(session)
     return ConstraintGetResponse(
         time_slots=time_slots,
+        services=services,
         min_advance_minutes=MIN_ADVANCE_MINUTES,
         max_advance_days=MAX_ADVANCE_DAYS,
         forbidden_weekdays=FORBIDDEN_WEEKDAYS
