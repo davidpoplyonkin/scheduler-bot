@@ -41,6 +41,7 @@ async def reserve_appointment(
     user_id: int,
     date: datetime.date,
     time_slot_id: int,
+    service_id: int,
 ) -> Appointment:
     try:
         # Attempt to insert a new Block
@@ -63,7 +64,7 @@ async def reserve_appointment(
         # Insert the Appointment
         appt_stmt = (
             insert(Appointment)
-            .values(user_id=user_id, block_id=block)
+            .values(user_id=user_id, block_id=block, service_id=service_id)
             .returning(Appointment)
         )
 
@@ -88,7 +89,7 @@ async def reserve_appointment(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Non-existent time slot provided."
+            detail="Invalid time slot or service provided."
         )
 
 

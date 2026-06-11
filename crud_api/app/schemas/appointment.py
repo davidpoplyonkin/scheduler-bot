@@ -15,6 +15,7 @@ class AppointmentUserGetResponse(BaseModel):
 class AppointmentReserveRequest(BaseModel):
     date: datetime.date
     time_slot_id: int
+    service_id: int
 
     model_config = config_dict
 

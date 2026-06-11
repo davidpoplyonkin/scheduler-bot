@@ -65,7 +65,8 @@ async def reserve_appointment(
         session,
         user.id,
         request.date,
-        request.time_slot_id
+        request.time_slot_id,
+        request.service_id
     )
 
     asyncio.create_task(create_calendar_event(

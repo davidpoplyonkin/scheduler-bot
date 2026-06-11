@@ -117,7 +117,7 @@ function BookingForm() {
   });
 
   const handleSubmit = form.onSubmit((values) => {
-    mutation.mutate({ date: values.date!, slot: values.slot! });
+    mutation.mutate({ date: values.date!, slot: values.slot!, service: values.service! });
   });
 
   // Trigger submission on Telegram BottomButton click
