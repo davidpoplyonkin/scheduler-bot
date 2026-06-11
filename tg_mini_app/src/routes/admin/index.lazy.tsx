@@ -12,6 +12,7 @@ import { AdminAppointmentsQueryOptions, VerifyProofMutationOptions } from './ind
 import { BottomButton } from '../../components/BottomButton';
 import { EmptyState } from '../../components/EmptyState';
 import SearchingIcon from '../../assets/Searching.svg?react';
+import { getServiceLabel } from '../../utils/serviceLabel';
 
 const tg = window.Telegram.WebApp;
 
@@ -34,19 +35,30 @@ function AdminList() {
       const day = dayjs.utc(result.appointmentDate).format('dd, MMM D');
       const time = dayjs.utc(result.appointmentTime, 'HH:mm:ss')
         .format('HH:mm');
+      const serviceName = getServiceLabel(t, result.service);
 
       notifications.show({
-        title: result.userName,
+        title: `${serviceName} · ${result.userName}`,
         message: `${day} ${t('datetime.at', { ns: 'shared' })} ${time}`,
         color: 'green',
       });
     },
-    onError: (_error: AxiosError) => {
-      notifications.show({
-        title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
-        message: t('notifications.verificationFailed', { ns: 'admin' }),
-        color: 'red',
-      });
+    throwOnError: (error: AxiosError) => {
+      // throw an error for non-422 status codes
+      if (error.response?.status !== 422) {
+        return true; 
+      }
+
+      return false;
+    },
+    onError: (error) => {
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        notifications.show({
+          title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
+          message: t('notifications.verificationFailed', { ns: 'admin' }),
+          color: 'red',
+        });
+      }
     },
     onMutate: () => tg.SecondaryButton.showProgress(),
     onSettled: () => tg.SecondaryButton.hideProgress(),
@@ -108,7 +120,7 @@ function AdminList() {
               {day.appointments.map((appt) => (
                 <Timeline.Item key={appt.id}>
                   <Text truncate='end'>
-                    {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
+                    {getServiceLabel(t, appt.service)} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
                   </Text>
                   <Text
                     size='sm'

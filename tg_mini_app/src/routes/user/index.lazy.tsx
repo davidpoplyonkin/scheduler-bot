@@ -15,6 +15,7 @@ import { BottomButton } from '../../components/BottomButton'
 import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
 import SearchingIcon from '../../assets/Searching.svg?react'
+import { getServiceLabel } from '../../utils/serviceLabel'
 
 dayjs.extend(customParseFormat)
 dayjs.extend(utc)
@@ -73,17 +74,23 @@ function UserList() {
           {appointments?.map((appt) => {
             const day = dayjs.utc(appt.date).format('dd, MMM D');
             const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
+            const dayTime = [
+              day,
+              t('datetime.at', { ns: 'shared' }),
+              time
+            ].join(' ');
+            const service = getServiceLabel(t, appt.service)
 
             return <Timeline.Item key={appt.id}>
               <Group justify='space-between' wrap='nowrap'>
                 <div>
-                  <Text>{day}</Text>
+                  <Text>{service}</Text>
                   <Text
                     size='sm'
                     c='dimmed'
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
-                    {time}
+                    {dayTime}
                   </Text>
                 </div>
                 <ActionIcon
@@ -91,7 +98,7 @@ function UserList() {
                   size='lg'
                   onClick={() => {
                     mutation.mutate(appt.id);
-                    setModalTitle(`${day} ${t('datetime.at', { ns: 'shared' })} ${time}`);
+                    setModalTitle(`${service} · ${dayTime}`);
                   }}
                   loading={loadingId === appt.id}
                 >

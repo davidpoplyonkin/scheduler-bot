@@ -1,9 +1,10 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { Chip, Flex, Text } from '@mantine/core';
+import { Chip, Flex, Text, useMatches } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
+import { useElementSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -14,8 +15,9 @@ import { AxiosError } from 'axios';
 import { BlocksQueryOptions } from '../index.queries';
 import { CreateAppointmentMutationOptions } from './booking.queries';
 import { BottomButton } from '../../components/BottomButton';
-import { ChipTransition } from '../../components/ChipTransition';
+import { ChipCarousel } from '../../components/ChipCarousel';
 import { timeSlotAvailable } from '../../utils/timeSlots';
+import { getServiceLabel } from '../../utils/serviceLabel';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -56,10 +58,12 @@ function BookingForm() {
   const form = useForm({
     mode: 'controlled',
     initialValues: {
+      service: null as number | null,
       date: null as string | null,
       slot: null as number | null,
     },
     validate: {
+      service: (value) => (value ? null : t('validation.serviceRequired', { ns: 'user' })),
       date: (value) => (value ? null : t('validation.dateRequired', { ns: 'user' })),
       slot: (value) => (value ? null : t('validation.timeSlotRequired', { ns: 'user' })),
     },
@@ -114,7 +118,7 @@ function BookingForm() {
   });
 
   const handleSubmit = form.onSubmit((values) => {
-    mutation.mutate({ date: values.date!, slot: values.slot! });
+    mutation.mutate({ date: values.date!, slot: values.slot!, service: values.service! });
   });
 
   // Trigger submission on Telegram BottomButton click
@@ -126,6 +130,9 @@ function BookingForm() {
 
   const formRef = useRef<HTMLFormElement>(null);
   const formValid = form.isValid();
+
+  const { ref: datePickerRef, width, height } = useElementSize();
+  const orientation = useMatches({ base: 'horizontal' as const, xs: 'vertical' as const });
 
   // Time in server's timezone - not UTC
   const serverTime = dayjs.utc(blocksResponse?.serverTime.slice(0, 19));
@@ -144,32 +151,25 @@ function BookingForm() {
       maxDateTime,
     });
 
-  const DateUnavailable = (date: string) => {
-    if (blocksLoading) {
-      return true; // exclude by default
-    }
+  const serviceChips = constraints.services.map((s) =>  (
+    <Chip value={s.id.toString()}>
+      { getServiceLabel(t, s) }
+    </Chip>
+  ));
 
-    // Check if any of the time slots is available
-    return !constraints.timeSlots.some((s) => isSlotAvailable(date, s));
-  };
-
-  const chips = constraints.timeSlots.map((s) => {
+  const timeSlotChips = constraints.timeSlots.map((s) => {
     const date = form.getValues().date;
 
     const disabled = date ? !isSlotAvailable(date, s) : true;
 
     return (
-      <Chip
-        value={s.id.toString()}
-        disabled={disabled}
-        styles={{ input: {display: 'block'}}} // necessary for a smooth transition
-      >
+      <Chip value={s.id.toString()} disabled={disabled}>
         <Text style={{ fontVariantNumeric: 'tabular-nums' }}>
           { dayjs.utc(s.startTime, 'HH:mm:ss').format('HH:mm') }
         </Text>
       </Chip>
     );
-});
+  });
 
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
@@ -179,19 +179,39 @@ function BookingForm() {
         callback={triggerSubmit}
       />
       <Flex
-        direction={{ base: 'column', xs: 'row' }}
+        direction={orientation === 'horizontal' ? 'column' : 'row' }
         align='center'
         justify='center'
-        gap={0}
+        gap='md'
       >
+        {/* Service */}
+        <Chip.Group {...form.getInputProps('service')}>
+          <ChipCarousel
+            width={width}
+            height={height}
+            orientation={orientation}
+            align='end'
+          >
+            {serviceChips}
+          </ChipCarousel>
+        </Chip.Group>
+
+        {/* Date */}
         <DatePicker
+          ref={datePickerRef}
           {...form.getInputProps('date')}
           size='md'
           minDate={minDateTime.toDate()}
           maxDate={maxDateTime.toDate()}
           hideOutsideDates // Hide days from prev/next month
           maxLevel='month' // Disable month/year selection
-          excludeDate={DateUnavailable}
+          excludeDate={(date: string) => {
+            // exclude by default
+            if (blocksLoading) { return true; }
+
+            // Check if any of the time slots is available
+            return !constraints.timeSlots.some((s) => isSlotAvailable(date, s));
+          }}
           onChange={(value) => {
             // Update selected date
             form.setFieldValue('date', value);
@@ -207,11 +227,17 @@ function BookingForm() {
           }}
         />
 
-        <ChipTransition
-          mounted={form.values.date !== null}
-          chipGroupProps={form.getInputProps('slot')}
-          chips={chips}
-        />
+        {/* Time Slot */}
+        <Chip.Group {...form.getInputProps('slot')}>
+          <ChipCarousel
+            width={width}
+            height={height}
+            orientation={orientation}
+            align='start'
+          >
+            {timeSlotChips}
+          </ChipCarousel>
+        </Chip.Group>
       </Flex>
     </form>
   );

@@ -15,4 +15,8 @@ export default defineConfig({
     svgr(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  define: {
+    // This captures the exact time 'npm run build' is executed
+    __BUILD_TIME__: JSON.stringify(Date.now()),
+  },
 })

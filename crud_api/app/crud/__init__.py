@@ -3,3 +3,4 @@ from .appointment import get_user_appointments, reserve_appointment, get_admin_a
 from .time_slot import get_time_slots
 from .block import get_blocks
 from .blackout import create_blackouts
+from .service import get_services

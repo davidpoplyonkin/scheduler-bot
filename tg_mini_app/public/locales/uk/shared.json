@@ -2,6 +2,9 @@
   "buttons": {
     "submit": "Надіслати"
   },
+  "labels": {
+    "serviceLabel": "Послуга {{id}}" 
+  },
   "notifications": {
     "success": "Успішно"
   },

@@ -4,7 +4,8 @@
   },
   "validation": {
     "dateRequired": "Date is required",
-    "timeSlotRequired": "Time slot is required"
+    "timeSlotRequired": "Time slot is required",
+    "serviceRequired": "Service is required"
   },
   "notifications": {
     "appointmentBooked": "The appointment was booked successfully",

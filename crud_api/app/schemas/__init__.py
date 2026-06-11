@@ -9,3 +9,4 @@ from .blackout import BlackoutCreateRequest, BlackoutCreateResponse
 from .proof import ProofGenerateRequest, ProofGenerateResponse, ProofVerifyRequest, ProofVerifyResponse
 from .tg import (TgMessage, TgSendMessageRequest, TgSendMessageResponse,
                  TgDeleteMessageRequest, TgDeleteMessageResponse)
+from .service import ServiceOut, ServiceTranslationOut

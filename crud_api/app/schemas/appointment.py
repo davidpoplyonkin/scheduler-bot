@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, AliasPath
 import datetime
 
 from .config import config_dict
+from .service import ServiceOut
 
 class AppointmentUserGetResponse(BaseModel):
     id: int
@@ -9,12 +10,14 @@ class AppointmentUserGetResponse(BaseModel):
     time: datetime.time = Field(
         validation_alias=AliasPath("block", "time_slot", "start_time")
     )
+    service: ServiceOut
 
     model_config = config_dict
 
 class AppointmentReserveRequest(BaseModel):
     date: datetime.date
     time_slot_id: int
+    service_id: int
 
     model_config = config_dict
 
@@ -31,6 +34,7 @@ class AppointmentAdminOut(BaseModel):
     time: datetime.time
     user_id: int
     user_full_name: str | None
+    service: ServiceOut
 
     model_config = config_dict
 

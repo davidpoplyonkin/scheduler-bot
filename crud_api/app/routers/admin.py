@@ -36,6 +36,7 @@ async def get_appointments(
             "time": appt.block.time_slot.start_time,
             "user_id": appt.user_id,
             "user_full_name": appt.user.full_name,
+            "service": appt.service,
         })
 
     return AppointmentAdminGetResponse(
@@ -119,4 +120,5 @@ async def verify_proof(
         user_name=appointment.user.full_name or f"User {appointment.user_id}",
         appointment_date=appointment.block.date,
         appointment_time=appointment.block.time_slot.start_time,
+        service=appointment.service,
     )

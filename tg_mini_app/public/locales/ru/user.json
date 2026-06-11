@@ -4,7 +4,8 @@
   },
   "validation": {
     "dateRequired": "Выберите дату",
-    "timeSlotRequired": "Выберите время"
+    "timeSlotRequired": "Выберите время",
+    "serviceRequired": "Выберите услугу"
   },
   "notifications": {
     "appointmentBooked": "Запись успешно создана",
