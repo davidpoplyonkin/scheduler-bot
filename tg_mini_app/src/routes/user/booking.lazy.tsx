@@ -17,6 +17,7 @@ import { CreateAppointmentMutationOptions } from './booking.queries';
 import { BottomButton } from '../../components/BottomButton';
 import { ChipCarousel } from '../../components/ChipCarousel';
 import { timeSlotAvailable } from '../../utils/timeSlots';
+import { getServiceLabel } from '../../utils/serviceLabel';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -150,20 +151,11 @@ function BookingForm() {
       maxDateTime,
     });
 
-  const serviceChips = constraints.services.map((s) => {
-    const userLang = tg.initDataUnsafe.user?.language_code;
-    const label = (
-      s.translations.find(t => t.languageCode === userLang)?.name ||
-      s.translations.find(t => t.languageCode === 'en')?.name ||
-      t('labels.serviceLabel', { ns: 'user', id: s.id.toString() })
-    );
-
-    return (
-      <Chip value={s.id.toString()}>
-        { label }
-      </Chip>
-    )
-  });
+  const serviceChips = constraints.services.map((s) =>  (
+    <Chip value={s.id.toString()}>
+      { getServiceLabel(t, s) }
+    </Chip>
+  ));
 
   const timeSlotChips = constraints.timeSlots.map((s) => {
     const date = form.getValues().date;

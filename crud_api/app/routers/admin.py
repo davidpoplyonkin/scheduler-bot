@@ -36,6 +36,7 @@ async def get_appointments(
             "time": appt.block.time_slot.start_time,
             "user_id": appt.user_id,
             "user_full_name": appt.user.full_name,
+            "service": appt.service,
         })
 
     return AppointmentAdminGetResponse(

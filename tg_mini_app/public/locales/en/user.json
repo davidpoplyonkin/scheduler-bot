@@ -2,9 +2,6 @@
   "buttons": {
     "book": "Book"
   },
-  "labels": {
-    "serviceLabel": "Service {{id}}" 
-  },
   "validation": {
     "dateRequired": "Date is required",
     "timeSlotRequired": "Time slot is required",

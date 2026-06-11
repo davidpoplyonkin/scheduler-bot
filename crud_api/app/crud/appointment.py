@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from typing import List
 import datetime
 
-from models import Appointment, Block, TimeSlot, User
+from models import Appointment, Block, TimeSlot, User, Service
 from utils import get_today_in_tz
 
 async def get_user_appointments(
@@ -28,7 +28,8 @@ async def get_user_appointments(
         .order_by(Block.date, TimeSlot.start_time)
         .options(
             contains_eager(Appointment.block)
-            .contains_eager(Block.time_slot)
+            .contains_eager(Block.time_slot),
+            joinedload(Appointment.service)
         )
     )
 
@@ -76,7 +77,8 @@ async def reserve_appointment(
             select(Appointment)
             .options(
                 joinedload(Appointment.block)
-                .joinedload(Block.time_slot)
+                .joinedload(Block.time_slot),
+                joinedload(Appointment.service)
             )
             .where(Appointment.id == appointment.id)
         )
@@ -108,7 +110,8 @@ async def get_admin_appointments(
         .options(
             contains_eager(Appointment.block)
             .contains_eager(Block.time_slot),
-            contains_eager(Appointment.user)
+            contains_eager(Appointment.user),
+            joinedload(Appointment.service)
         )
     )
 

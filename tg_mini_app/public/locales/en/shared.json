@@ -2,6 +2,9 @@
   "buttons": {
     "submit": "Submit"
   },
+  "labels": {
+    "serviceLabel": "Service {{id}}" 
+  },
   "notifications": {
     "success": "Success"
   },

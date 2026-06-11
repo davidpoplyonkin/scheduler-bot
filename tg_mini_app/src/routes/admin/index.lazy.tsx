@@ -12,6 +12,7 @@ import { AdminAppointmentsQueryOptions, VerifyProofMutationOptions } from './ind
 import { BottomButton } from '../../components/BottomButton';
 import { EmptyState } from '../../components/EmptyState';
 import SearchingIcon from '../../assets/Searching.svg?react';
+import { getServiceLabel } from '../../utils/serviceLabel';
 
 const tg = window.Telegram.WebApp;
 
@@ -108,7 +109,7 @@ function AdminList() {
               {day.appointments.map((appt) => (
                 <Timeline.Item key={appt.id}>
                   <Text truncate='end'>
-                    {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
+                    {getServiceLabel(t, appt.service)} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
                   </Text>
                   <Text
                     size='sm'

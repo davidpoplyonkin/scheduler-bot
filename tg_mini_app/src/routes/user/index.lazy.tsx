@@ -15,6 +15,7 @@ import { BottomButton } from '../../components/BottomButton'
 import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
 import SearchingIcon from '../../assets/Searching.svg?react'
+import { getServiceLabel } from '../../utils/serviceLabel'
 
 dayjs.extend(customParseFormat)
 dayjs.extend(utc)
@@ -77,13 +78,13 @@ function UserList() {
             return <Timeline.Item key={appt.id}>
               <Group justify='space-between' wrap='nowrap'>
                 <div>
-                  <Text>{day}</Text>
+                  <Text>{getServiceLabel(t, appt.service)}</Text>
                   <Text
                     size='sm'
                     c='dimmed'
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
-                    {time}
+                    {`${day} ${t('datetime.at', { ns: 'shared' })} ${time}`}
                   </Text>
                 </div>
                 <ActionIcon

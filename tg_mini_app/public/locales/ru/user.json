@@ -2,9 +2,6 @@
   "buttons": {
     "book": "Записаться"
   },
-  "labels": {
-    "serviceLabel": "Услуга {{id}}" 
-  },
   "validation": {
     "dateRequired": "Выберите дату",
     "timeSlotRequired": "Выберите время",
