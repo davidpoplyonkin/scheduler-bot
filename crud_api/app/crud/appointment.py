@@ -127,7 +127,8 @@ async def get_appointment_with_user(
         select(Appointment)
         .options(
             joinedload(Appointment.block).joinedload(Block.time_slot),
-            joinedload(Appointment.user)
+            joinedload(Appointment.user),
+            joinedload(Appointment.service)
         )
         .where(Appointment.id == appointment_id)
     )

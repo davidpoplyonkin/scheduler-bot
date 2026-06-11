@@ -35,19 +35,30 @@ function AdminList() {
       const day = dayjs.utc(result.appointmentDate).format('dd, MMM D');
       const time = dayjs.utc(result.appointmentTime, 'HH:mm:ss')
         .format('HH:mm');
+      const serviceName = getServiceLabel(t, result.service);
 
       notifications.show({
-        title: result.userName,
+        title: `${serviceName} · ${result.userName}`,
         message: `${day} ${t('datetime.at', { ns: 'shared' })} ${time}`,
         color: 'green',
       });
     },
-    onError: (_error: AxiosError) => {
-      notifications.show({
-        title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
-        message: t('notifications.verificationFailed', { ns: 'admin' }),
-        color: 'red',
-      });
+    throwOnError: (error: AxiosError) => {
+      // throw an error for non-422 status codes
+      if (error.response?.status !== 422) {
+        return true; 
+      }
+
+      return false;
+    },
+    onError: (error) => {
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        notifications.show({
+          title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
+          message: t('notifications.verificationFailed', { ns: 'admin' }),
+          color: 'red',
+        });
+      }
     },
     onMutate: () => tg.SecondaryButton.showProgress(),
     onSettled: () => tg.SecondaryButton.hideProgress(),

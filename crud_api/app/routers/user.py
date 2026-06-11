@@ -82,13 +82,24 @@ async def reserve_appointment(
         appointment.block.time_slot.start_time.strftime("%H:%M")
     )
 
+    # Get service name with translation fallback
+    service_translations = {
+        tr.language_code: tr.name for tr in appointment.service.translations
+    }
+    service_name = (
+        service_translations.get(lang)
+        or service_translations.get("en")
+        or ""
+    )
+    service_str = escape_markdownv2(service_name)
+
     # Notify the admin in Telegram about the new booking
     asyncio.create_task(send_notification(
         ADMIN_TG_ID,
         (
             f"*{t('New booking:', lang)}*\n"
-            f"{date_str} "
-            f"{t('at', lang)} {time_str}"
+            f"{service_str}{'\n' if service_str else ''}"
+            f"{date_str} {t('at', lang)} {time_str}"
         ),
         parse_mode="MarkdownV2"
     ))
