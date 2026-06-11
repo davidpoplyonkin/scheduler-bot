@@ -1,9 +1,10 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { Chip, Flex, Text } from '@mantine/core';
+import { Chip, Flex, Text, useMatches } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
+import { useElementSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -13,7 +14,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BlocksQueryOptions } from '../index.queries';
 import { CreateBlackoutMutationOptions } from './blackout.queries';
 import { BottomButton } from '../../components/BottomButton';
-import { ChipTransition } from '../../components/ChipTransition';
+import { ChipCarousel } from '../../components/ChipCarousel';
 import { timeSlotAvailable } from '../../utils/timeSlots';
 
 dayjs.extend(customParseFormat);
@@ -103,6 +104,9 @@ function BlackoutForm() {
 
   const formValid = form.isValid();
 
+  const { ref: datePickerRef, width, height } = useElementSize();
+  const orientation = useMatches({ base: 'horizontal' as const, xs: 'vertical' as const });
+
   // Time in server's timezone - not UTC
   const serverTime = dayjs.utc(blocksResponse?.serverTime.slice(0, 19));
 
@@ -128,12 +132,7 @@ function BlackoutForm() {
     const disabled = isOneDayRange ? !isSlotAvailable(startDate, s) : true;
 
     return (
-      <Chip
-        key={s.id}
-        value={s.id.toString()}
-        disabled={disabled}
-        styles={{ input: {display: 'block'}}} // necessary for a smooth transition
-      >
+      <Chip value={s.id.toString()} disabled={disabled}>
         <Text style={{ fontVariantNumeric: 'tabular-nums' }}>
           { dayjs.utc(s.startTime, 'HH:mm:ss').format('HH:mm') }
         </Text>
@@ -149,12 +148,13 @@ function BlackoutForm() {
         callback={triggerSubmit}
       />
       <Flex
-        direction={{ base: 'column', xs: 'row' }}
+        direction={orientation === 'horizontal' ? 'column' : 'row'}
         align='center'
         justify='center'
-        gap={0}
+        gap='md'
       >
         <DatePicker
+          ref={datePickerRef}
           type='range'
           allowSingleDateInRange
           value={form.values.dateRange}
@@ -179,14 +179,16 @@ function BlackoutForm() {
           }}
         />
 
-        <ChipTransition
-          mounted={isOneDayRange}
-          chipGroupProps={{
-            ...form.getInputProps('slots'),
-            multiple: true,
-          }}
-          chips={chips}
-        />
+        <Chip.Group {...form.getInputProps('slots')} multiple>
+          <ChipCarousel
+            width={width}
+            height={height}
+            orientation={orientation}
+            align='start'
+          >
+            {chips}
+          </ChipCarousel>
+        </Chip.Group>
       </Flex>
     </form>
   );
