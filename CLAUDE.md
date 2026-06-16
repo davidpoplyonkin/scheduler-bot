@@ -26,6 +26,13 @@ docker compose up crud-api postgres
 docker compose up    # All services (requires master-nginx-network)
 ```
 
+### Database Migrations
+```bash
+# Create new migration (inside crud_api/)
+alembic -c app/alembic.ini revision --autogenerate -m "description"
+# Migrations auto-apply on Docker container startup
+```
+
 ## Architecture
 
 ### Frontend
@@ -33,18 +40,20 @@ docker compose up    # All services (requires master-nginx-network)
   - `__root.tsx` - App shell with safe area insets
   - `index.tsx` - Auth-based redirect (admin vs user)
   - `user/index.tsx` - Appointment list
-  - `user/booking.tsx` - Booking form with date/time selection
+  - `user/booking.tsx` - Booking form with date/time/service selection
   - `admin/index.tsx` - Admin appointment list
   - `admin/blackout.tsx` - Blackout form for blocking time slots
 - **State**: TanStack Query for server state, Mantine Form for form state
 - **API Client**: `src/services/crud.ts` - Axios with 401 interceptor for auto token refresh
 - **Auth**: `src/utils/auth.ts` - Exchanges Telegram InitData for JWT
+- **Localization**: i18next with `public/locales/[en|ru|uk]/` JSON files
 
 ### Backend
-- **Routers**: `app/routers/` - auth (token exchange), user (appointments/constraints)
-- **Models**: `app/models.py` - User, TimeSlot, Block, Appointment
-- **Auth**: `app/utils/auth.py` - Telegram InitData verification, JWT handling, RBAC decorator
-- **Database**: Async SQLAlchemy with AsyncPG, Alembic migrations in `app/alembic/`
+- **Routers**: `app/routers/` - auth, user, admin, shared
+- **Models**: `app/models/` - User, TimeSlot, Block, Appointment, Blackout, Service
+- **Auth**: `app/deps/auth.py` - RBAC decorator; `app/utils/init_data.py` - InitData verification + JWT
+- **Database**: Async SQLAlchemy with AsyncPG, Alembic migrations in `app/migrations/`
+- **Integrations**: `app/utils/google_calendar.py`, `app/utils/notifications.py`
 
 ### Authentication Flow
 1. Frontend sends Telegram InitData to `POST /auth/token`
@@ -66,7 +75,8 @@ Users can generate signed QR codes for appointments, which admins scan to verify
 
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
-- `Appointment` = user assigned to a block
+- `Appointment` = user assigned to a block, with service selection
+- `Service` = appointment type with translations (ServiceTranslation)
 - Role determined by `tg_id == ADMIN_TG_ID` env var
 
 ## Environment Variables
@@ -82,3 +92,4 @@ Required in `.env`:
 - `MIN_ADVANCE_MINUTES` - Minimum minutes before a slot can be booked
 - `MAX_ADVANCE_DAYS` - Maximum days in advance a slot can be booked
 - `FORBIDDEN_WEEKDAYS` - Comma-separated weekday numbers to block (default: `5,6` for Sat/Sun)
+- `ADMIN_GOOGLE_EMAIL` - Admin's email for Google Calendar events
