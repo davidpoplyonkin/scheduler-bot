@@ -73,10 +73,23 @@ Users can generate signed QR codes for appointments, which admins scan to verify
 - `app/schemas/proof.py` - Request/response schemas for generate and verify
 - `src/components/BottomButton.tsx` - Unified Main/Secondary button component
 
+### Payment Flow (Monobank Acquiring)
+Appointment booking integrates with Monobank to create payment invoices:
+1. `POST /user/appointments` creates Block + Appointment with `status=PENDING`, `invoice_id=NULL`
+2. Backend calls Monobank `POST /api/merchant/invoice/create` with service pricing
+3. On success: appointment updated with `invoice_id`, response includes `payment_url`
+4. On failure: Block deleted, appointment `status=CANCELLED`
+5. User redirected to `payment_url` (Monobank hosted payment page)
+
+**Key files:**
+- `app/utils/monobank.py` - `create_invoice()` async utility
+- `app/schemas/monobank.py` - `InvoiceCreateRequest`, `InvoiceCreateResponse`
+- `app/crud/appointment.py` - `confirm_appointment_invoice()`, `cancel_appointment_invoice()`
+
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
-- `Appointment` = user assigned to a block, with service selection
-- `Service` = appointment type with translations (ServiceTranslation)
+- `Appointment` = user assigned to a block, with service selection and `invoice_id`
+- `Service` = appointment type with translations (ServiceTranslation) and pricing (`amount_minor`, `currency_code`)
 - Role determined by `tg_id == ADMIN_TG_ID` env var
 
 ## Environment Variables
@@ -93,3 +106,7 @@ Required in `.env`:
 - `MAX_ADVANCE_DAYS` - Maximum days in advance a slot can be booked
 - `FORBIDDEN_WEEKDAYS` - Comma-separated weekday numbers to block (default: `5,6` for Sat/Sun)
 - `ADMIN_GOOGLE_EMAIL` - Admin's email for Google Calendar events
+- `MONOBANK_TOKEN` - Monobank merchant API token
+- `MONOBANK_API_URL` - Monobank API base URL (default: `https://api.monobank.ua`)
+- `MONOBANK_REDIRECT_URL` - URL to redirect user after payment
+- `MONOBANK_WEBHOOK_URL` - Optional webhook URL for payment status updates

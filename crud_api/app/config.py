@@ -40,3 +40,9 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 GOOGLE_SERVICE_ACCOUNT_KEY_PATH = "/run/secrets/google-key"
 ADMIN_GOOGLE_EMAIL = os.getenv("ADMIN_GOOGLE_EMAIL")
 BOT_NAME = os.getenv("BOT_NAME", "Scheduler Bot")
+
+# Monobank Acquiring
+MONOBANK_TOKEN = os.getenv("MONOBANK_TOKEN")
+MONOBANK_API_URL = os.getenv("MONOBANK_API_URL", "https://api.monobank.ua")
+MONOBANK_REDIRECT_URL = os.getenv("MONOBANK_REDIRECT_URL")
+MONOBANK_WEBHOOK_URL = os.getenv("MONOBANK_WEBHOOK_URL")

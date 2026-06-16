@@ -22,6 +22,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - ADMIN_GOOGLE_EMAIL=${ADMIN_GOOGLE_EMAIL}
       - BOT_NAME=${BOT_NAME}
+      - MONOBANK_TOKEN=${MONOBANK_TOKEN}
+      - MONOBANK_REDIRECT_URL=${MONOBANK_REDIRECT_URL}
     depends_on:
       - postgres
       - redis

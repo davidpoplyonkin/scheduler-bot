@@ -10,3 +10,4 @@ from .proof import ProofGenerateRequest, ProofGenerateResponse, ProofVerifyReque
 from .tg import (TgMessage, TgSendMessageRequest, TgSendMessageResponse,
                  TgDeleteMessageRequest, TgDeleteMessageResponse)
 from .service import ServiceOut, ServiceTranslationOut
+from .monobank import MerchantPaymInfo, InvoiceCreateRequest, InvoiceCreateResponse

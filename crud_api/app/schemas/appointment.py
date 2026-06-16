@@ -25,6 +25,7 @@ class AppointmentReserveResponse(BaseModel):
     id: int
     date: datetime.date
     time: datetime.time
+    payment_url: str
 
     model_config = config_dict
 

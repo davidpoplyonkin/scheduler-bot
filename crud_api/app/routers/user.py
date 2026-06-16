@@ -9,7 +9,8 @@ from schemas import (Role, AppointmentUserGetResponse,
                      UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
-                   format_date, escape_markdownv2, create_calendar_event)
+                   format_date, escape_markdownv2, create_calendar_event,
+                   create_invoice)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, ADMIN_TG_ID, APPOINTMENT_DURATION_MINUTES)
 import crud
@@ -69,6 +70,26 @@ async def reserve_appointment(
         request.service_id
     )
 
+    # Create payment invoice via bank API
+    invoice_result = await create_invoice(
+        amount_minor=appointment.service.amount_minor,
+        currency_code=appointment.service.currency_code,
+        reference=f"appointment-{appointment.id}",
+    )
+
+    if invoice_result is None:
+        await crud.cancel_appointment_invoice(session, appointment.id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to create payment invoice."
+        )
+
+    appointment = await crud.confirm_appointment_invoice(
+        session,
+        appointment.id,
+        invoice_result.invoice_id
+    )
+
     asyncio.create_task(create_calendar_event(
         event_date=appointment.block.date,
         event_time=appointment.block.time_slot.start_time,
@@ -107,7 +128,8 @@ async def reserve_appointment(
     return AppointmentReserveResponse(
         id=appointment.id,
         date=appointment.block.date,
-        time=appointment.block.time_slot.start_time
+        time=appointment.block.time_slot.start_time,
+        payment_url=invoice_result.page_url
     )
 
 @router.post("/proofs/generate", response_model=ProofGenerateResponse)
