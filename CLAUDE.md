@@ -80,11 +80,20 @@ Appointment booking integrates with Monobank to create payment invoices:
 3. On success: appointment updated with `invoice_id`, response includes `payment_url`
 4. On failure: Block deleted, appointment `status=CANCELLED`
 5. User redirected to `payment_url` (Monobank hosted payment page)
+6. Backend schedules invoice status polling via APScheduler
+
+**Invoice Status Polling:**
+- `schedule_invoice_check()` schedules a job to poll Monobank `GET /api/merchant/invoice/status`
+- Polls every `INVOICE_CHECK_DELAY_SECONDS` (default: 60s), up to `INVOICE_CHECK_MAX_RETRIES` (default: 30)
+- On `success`: appointment `status=CONFIRMED`, calendar event created, admin notified
+- On `failure`/`expired`/`reversed`: Block deleted, appointment `status=CANCELLED`
+- On `created`/`processing`: reschedule check (countdown `retries_left`)
 
 **Key files:**
-- `app/utils/monobank.py` - `create_invoice()` async utility
-- `app/schemas/monobank.py` - `InvoiceCreateRequest`, `InvoiceCreateResponse`
-- `app/crud/appointment.py` - `confirm_appointment_invoice()`, `cancel_appointment_invoice()`
+- `app/utils/monobank.py` - `create_invoice()`, `get_invoice_status()`
+- `app/utils/invoice_checker.py` - `schedule_invoice_check()`, `check_invoice_status()`, `on_payment_success()`
+- `app/schemas/monobank.py` - `InvoiceStatus` enum, `InvoiceCreateRequest`, `InvoiceCreateResponse`, `InvoiceStatusResponse`
+- `app/crud/appointment.py` - `confirm_appointment_invoice()`, `cancel_appointment_invoice()`, `confirm_appointment_payment()`
 
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
@@ -110,3 +119,5 @@ Required in `.env`:
 - `MONOBANK_API_URL` - Monobank API base URL (default: `https://api.monobank.ua`)
 - `MONOBANK_REDIRECT_URL` - URL to redirect user after payment
 - `MONOBANK_WEBHOOK_URL` - Optional webhook URL for payment status updates
+- `INVOICE_CHECK_DELAY_SECONDS` - Delay between invoice status checks (default: `60`)
+- `INVOICE_CHECK_MAX_RETRIES` - Max polling attempts before giving up (default: `30`)

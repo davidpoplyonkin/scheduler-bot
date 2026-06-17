@@ -8,11 +8,10 @@ from schemas import (Role, AppointmentUserGetResponse,
                      ProofGenerateRequest, ProofGenerateResponse,
                      UserAuthSchema)
 from deps import authorize_current_user, DBSessionDep
-from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
-                   format_date, escape_markdownv2, create_calendar_event,
-                   create_invoice)
+from utils import (get_today_in_tz, get_init_data_hash, create_invoice,
+                   schedule_invoice_check)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
-                    QR_SECRET_KEY, ADMIN_TG_ID, APPOINTMENT_DURATION_MINUTES)
+                    QR_SECRET_KEY, INVOICE_CHECK_MAX_RETRIES)
 import crud
 
 router = APIRouter(
@@ -74,7 +73,7 @@ async def reserve_appointment(
     invoice_result = await create_invoice(
         amount_minor=appointment.service.amount_minor,
         currency_code=appointment.service.currency_code,
-        reference=f"appointment-{appointment.id}",
+        reference=str(appointment.id),
     )
 
     if invoice_result is None:
@@ -90,39 +89,10 @@ async def reserve_appointment(
         invoice_result.invoice_id
     )
 
-    asyncio.create_task(create_calendar_event(
-        event_date=appointment.block.date,
-        event_time=appointment.block.time_slot.start_time,
-        duration_minutes=APPOINTMENT_DURATION_MINUTES
-    ))
-
-    admin = await crud.get_user_by_tg_id(session, ADMIN_TG_ID)
-    lang = admin.language_code if admin else None
-    date_str = escape_markdownv2(format_date(appointment.block.date, lang))
-    time_str = escape_markdownv2(
-        appointment.block.time_slot.start_time.strftime("%H:%M")
-    )
-
-    # Get service name with translation fallback
-    service_translations = {
-        tr.language_code: tr.name for tr in appointment.service.translations
-    }
-    service_name = (
-        service_translations.get(lang)
-        or service_translations.get("en")
-        or ""
-    )
-    service_str = escape_markdownv2(service_name)
-
-    # Notify the admin in Telegram about the new booking
-    asyncio.create_task(send_notification(
-        ADMIN_TG_ID,
-        (
-            f"*{t('New booking:', lang)}*\n"
-            f"{service_str}{'\n' if service_str else ''}"
-            f"{date_str} {t('at', lang)} {time_str}"
-        ),
-        parse_mode="MarkdownV2"
+    # Schedule invoice status check (handles notification + calendar on success)
+    asyncio.create_task(schedule_invoice_check(
+        invoice_id=invoice_result.invoice_id,
+        retries_left=INVOICE_CHECK_MAX_RETRIES
     ))
 
     return AppointmentReserveResponse(

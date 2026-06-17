@@ -151,6 +151,33 @@ async def cancel_appointment_invoice(
     await session.commit()
 
 
+async def confirm_appointment_payment(
+    session: AsyncSession,
+    appointment_id: int,
+) -> Appointment | None:
+    """Mark appointment as CONFIRMED after successful payment."""
+    stmt = (
+        update(Appointment)
+        .where(Appointment.id == appointment_id)
+        .values(status=AppointmentStatus.CONFIRMED)
+    )
+    await session.execute(stmt)
+    await session.commit()
+
+    # Re-fetch with eager loading including service translations
+    eager_stmt = (
+        select(Appointment)
+        .options(
+            joinedload(Appointment.block).joinedload(Block.time_slot),
+            joinedload(Appointment.user),
+            joinedload(Appointment.service).joinedload(Service.translations),
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(eager_stmt)
+    return result.unique().scalar_one_or_none()
+
+
 async def get_admin_appointments(
     session: AsyncSession,
 ) -> List[Appointment]:

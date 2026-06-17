@@ -1,7 +1,9 @@
 import httpx
 
-from config import MONOBANK_TOKEN, MONOBANK_API_URL, MONOBANK_REDIRECT_URL, MONOBANK_WEBHOOK_URL
-from schemas.monobank import InvoiceCreateRequest, InvoiceCreateResponse, MerchantPaymInfo
+from config import (MONOBANK_TOKEN, MONOBANK_API_URL, MONOBANK_REDIRECT_URL,
+                    MONOBANK_WEBHOOK_URL, INVOICE_VALIDITY_SECONDS)
+from schemas.monobank import (InvoiceCreateRequest, InvoiceCreateResponse,
+                              InvoiceStatusResponse, MerchantPaymInfo)
 
 
 async def create_invoice(
@@ -23,6 +25,7 @@ async def create_invoice(
         ),
         redirectUrl=MONOBANK_REDIRECT_URL,
         webHookUrl=MONOBANK_WEBHOOK_URL,
+        validity=INVOICE_VALIDITY_SECONDS,
     )
 
     async with httpx.AsyncClient() as client:
@@ -37,3 +40,18 @@ async def create_invoice(
 
     response = InvoiceCreateResponse.model_validate(api_response.json())
     return response
+
+
+async def get_invoice_status(invoice_id: str) -> InvoiceStatusResponse | None:
+    """Check invoice status via Monobank API."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{MONOBANK_API_URL}/api/merchant/invoice/status",
+            headers={"X-Token": MONOBANK_TOKEN},
+            params={"invoiceId": invoice_id},
+        )
+
+    if response.status_code != 200:
+        return None
+
+    return InvoiceStatusResponse.model_validate(response.json())
