@@ -11,5 +11,10 @@
     "appointmentBooked": "Запись успешно создана",
     "slotUnavailableTitle": "Слот недоступен",
     "slotUnavailable": "Выбранное время больше недоступно"
+  },
+  "statuses": {
+    "PENDING": "Ожидает",
+    "CONFIRMED": "Подтверждено",
+    "COMPLETED": "Завершено"
   }
 }

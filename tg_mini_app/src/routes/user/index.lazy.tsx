@@ -1,5 +1,5 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
-import { Timeline, Text, ActionIcon, Group, Modal, Box } from '@mantine/core'
+import { Timeline, Text, ActionIcon, Group, Modal, Box, Badge } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { IconQrcode } from '@tabler/icons-react'
@@ -84,7 +84,12 @@ function UserList() {
             return <Timeline.Item key={appt.id}>
               <Group justify='space-between' wrap='nowrap'>
                 <div>
-                  <Text>{service}</Text>
+                  <Group gap='xs'>
+                    <Text>{service}</Text>
+                    <Badge size='sm' variant='outline'>
+                      {t(`statuses.${appt.status}`, { ns: 'user' })}
+                    </Badge>
+                  </Group>
                   <Text
                     size='sm'
                     c='dimmed'
@@ -95,6 +100,7 @@ function UserList() {
                 </div>
                 <ActionIcon
                   variant='filled'
+                  disabled={appt.status !== "CONFIRMED"}
                   size='lg'
                   onClick={() => {
                     mutation.mutate(appt.id);

@@ -24,7 +24,12 @@ async def get_user_appointments(
         .join(Block.time_slot)
         .where(
             Appointment.user_id == user_id,
-            Block.date >= today_date
+            Block.date >= today_date,
+            Appointment.status.in_([
+                AppointmentStatus.PENDING,
+                AppointmentStatus.CONFIRMED,
+                AppointmentStatus.COMPLETED,
+            ]),
         )
         .order_by(Block.date, TimeSlot.start_time)
         .options(
