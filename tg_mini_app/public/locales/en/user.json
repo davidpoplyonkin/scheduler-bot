@@ -11,10 +11,5 @@
     "appointmentBooked": "The appointment was booked successfully",
     "slotUnavailableTitle": "Slot unavailable",
     "slotUnavailable": "The chosen time slot is no longer available"
-  },
-  "statuses": {
-    "PENDING": "Pending",
-    "CONFIRMED": "Confirmed",
-    "COMPLETED": "Completed"
   }
 }

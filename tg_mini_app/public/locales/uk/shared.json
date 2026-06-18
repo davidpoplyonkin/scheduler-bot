@@ -3,7 +3,7 @@
     "submit": "Надіслати"
   },
   "labels": {
-    "serviceLabel": "Послуга {{id}}" 
+    "serviceLabel": "Послуга {{id}}"
   },
   "notifications": {
     "success": "Успішно"
@@ -15,5 +15,10 @@
     "loading": "Завантаження...",
     "error": "Критична помилка",
     "noAppointments": "Записів ще немає"
+  },
+  "statuses": {
+    "PENDING": "Очікує",
+    "CONFIRMED": "Підтверджено",
+    "COMPLETED": "Завершено"
   }
 }

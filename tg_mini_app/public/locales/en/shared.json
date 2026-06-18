@@ -3,7 +3,7 @@
     "submit": "Submit"
   },
   "labels": {
-    "serviceLabel": "Service {{id}}" 
+    "serviceLabel": "Service {{id}}"
   },
   "notifications": {
     "success": "Success"
@@ -15,5 +15,10 @@
     "loading": "Loading...",
     "error": "Fatal error",
     "noAppointments": "No scheduled appointments yet"
+  },
+  "statuses": {
+    "PENDING": "Pending",
+    "CONFIRMED": "Confirmed",
+    "COMPLETED": "Completed"
   }
 }

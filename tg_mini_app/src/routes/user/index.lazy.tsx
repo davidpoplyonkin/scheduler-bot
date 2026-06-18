@@ -87,7 +87,7 @@ function UserList() {
                   <Group gap='xs'>
                     <Text>{service}</Text>
                     <Badge size='sm' variant='outline'>
-                      {t(`statuses.${appt.status}`, { ns: 'user' })}
+                      {t(`statuses.${appt.status}`, { ns: 'shared' })}
                     </Badge>
                   </Group>
                   <Text

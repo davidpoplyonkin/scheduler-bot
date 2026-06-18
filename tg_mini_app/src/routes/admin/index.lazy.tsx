@@ -1,6 +1,6 @@
 import { createLazyFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Divider, Timeline, Text } from '@mantine/core';
+import { Badge, Divider, Group, Timeline, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
 import { AxiosError } from 'axios';
@@ -119,15 +119,20 @@ function AdminList() {
             <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
               {day.appointments.map((appt) => (
                 <Timeline.Item key={appt.id}>
-                  <Text truncate='end'>
-                    {getServiceLabel(t, appt.service)} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
-                  </Text>
+                  <Group gap='xs'>
+                    <Text truncate='end'>
+                      {getServiceLabel(t, appt.service)}
+                    </Text>
+                    <Badge size='sm' variant='outline'>
+                      {t(`statuses.${appt.status}`, { ns: 'shared' })}
+                    </Badge>
+                  </Group>
                   <Text
                     size='sm'
                     c='dimmed'
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
-                    {dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm')}
+                    {dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm')} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
                   </Text>
                 </Timeline.Item>
               ))}

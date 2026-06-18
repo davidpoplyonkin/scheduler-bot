@@ -38,6 +38,7 @@ class AppointmentAdminOut(BaseModel):
     user_id: int
     user_full_name: str | None
     service: ServiceOut
+    status: AppointmentStatus
 
     model_config = config_dict
 

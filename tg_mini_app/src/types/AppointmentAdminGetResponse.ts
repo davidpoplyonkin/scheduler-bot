@@ -1,5 +1,6 @@
 import z from 'zod';
 import { ServiceIn } from './ConstraintUserGetResponse';
+import { AppointmentStatus } from './AppointmentUserGetResponse';
 
 const AppointmentAdminIn = z.object({
   id: z.number(),
@@ -7,6 +8,7 @@ const AppointmentAdminIn = z.object({
   userId: z.number(),
   userFullName: z.string().nullable(),
   service: ServiceIn,
+  status: AppointmentStatus,
 });
 
 const AppointmentAdminAggregateIn = z.object({

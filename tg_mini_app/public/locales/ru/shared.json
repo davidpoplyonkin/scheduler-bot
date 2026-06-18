@@ -3,7 +3,7 @@
     "submit": "Отправить"
   },
   "labels": {
-    "serviceLabel": "Услуга {{id}}" 
+    "serviceLabel": "Услуга {{id}}"
   },
   "notifications": {
     "success": "Успешно"
@@ -15,5 +15,10 @@
     "loading": "Загрузка...",
     "error": "Критическая ошибка",
     "noAppointments": "Записей пока нет"
+  },
+  "statuses": {
+    "PENDING": "Ожидает",
+    "CONFIRMED": "Подтверждено",
+    "COMPLETED": "Завершено"
   }
 }
