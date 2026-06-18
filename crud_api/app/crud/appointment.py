@@ -134,10 +134,13 @@ async def cancel_appointment_invoice(
     appointment_id: int,
 ) -> None:
     """Cancel appointment and delete block after failed payment creation."""
-    # Update appointment status to CANCELLED and get block_id
+    # Update appointment status to CANCELLED and get block_id (only if PENDING)
     stmt = (
         update(Appointment)
-        .where(Appointment.id == appointment_id)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.status == AppointmentStatus.PENDING,
+        )
         .values(status=AppointmentStatus.CANCELLED)
         .returning(Appointment.block_id)
     )
@@ -158,10 +161,20 @@ async def confirm_appointment_payment(
     """Mark appointment as CONFIRMED after successful payment."""
     stmt = (
         update(Appointment)
-        .where(Appointment.id == appointment_id)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.status == AppointmentStatus.PENDING,
+        )
         .values(status=AppointmentStatus.CONFIRMED)
+        .returning(Appointment.id)
     )
-    await session.execute(stmt)
+    result = await session.execute(stmt)
+    updated_id = result.scalar_one_or_none()
+
+    if updated_id is None:
+        await session.commit()
+        return None
+
     await session.commit()
 
     # Re-fetch with eager loading including service translations

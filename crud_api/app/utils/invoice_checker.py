@@ -70,6 +70,14 @@ async def schedule_invoice_check(
     )
 
 
+async def cancel_invoice_check(invoice_id: str) -> None:
+    """Cancel the polling job for an invoice (called when webhook arrives)."""
+    scheduler = await get_scheduler()
+    job_id = f"check_invoice_{invoice_id}"
+    if scheduler.get_job(job_id):
+        scheduler.remove_job(job_id)
+
+
 async def on_payment_success(session: AsyncSession, appointment_id: int) -> None:
     """
     Handle successful payment: notify admin and create calendar event.

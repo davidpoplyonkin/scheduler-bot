@@ -49,7 +49,7 @@ alembic -c app/alembic.ini revision --autogenerate -m "description"
 - **Localization**: i18next with `public/locales/[en|ru|uk]/` JSON files
 
 ### Backend
-- **Routers**: `app/routers/` - auth, user, admin, shared
+- **Routers**: `app/routers/` - auth, user, admin, shared, webhook
 - **Models**: `app/models/` - User, TimeSlot, Block, Appointment, Blackout, Service
 - **Auth**: `app/deps/auth.py` - RBAC decorator; `app/utils/init_data.py` - InitData verification + JWT
 - **Database**: Async SQLAlchemy with AsyncPG, Alembic migrations in `app/migrations/`
@@ -89,11 +89,20 @@ Appointment booking integrates with Monobank to create payment invoices:
 - On `failure`/`expired`/`reversed`: Block deleted, appointment `status=CANCELLED`
 - On `created`/`processing`: reschedule check (countdown `retries_left`)
 
+**Webhook Endpoint:**
+- `POST /webhook/monobank` receives payment status updates from Monobank
+- ECDSA signature verification via `MonobankWebhookPayload` dependency (public key cached, refreshed on failure)
+- On terminal status (`success`/`failure`/`reversed`): cancels polling job via `cancel_invoice_check()`
+- Handles status same as polling: `on_payment_success()` or `cancel_appointment_invoice()`
+- Note: Monobank does NOT send webhook for `expired` status, so polling remains the fallback
+
 **Key files:**
 - `app/utils/monobank.py` - `create_invoice()`, `get_invoice_status()`
-- `app/utils/invoice_checker.py` - `schedule_invoice_check()`, `check_invoice_status()`, `on_payment_success()`
+- `app/utils/invoice_checker.py` - `schedule_invoice_check()`, `check_invoice_status()`, `cancel_invoice_check()`, `on_payment_success()`
 - `app/schemas/monobank.py` - `InvoiceStatus` enum, `InvoiceCreateRequest`, `InvoiceCreateResponse`, `InvoiceStatusResponse`
 - `app/crud/appointment.py` - `confirm_appointment_invoice()`, `cancel_appointment_invoice()`, `confirm_appointment_payment()`
+- `app/routers/webhook.py` - `POST /webhook/monobank` endpoint
+- `app/deps/monobank.py` - `MonobankWebhookPayload` dependency with ECDSA signature verification
 
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
@@ -118,6 +127,6 @@ Required in `.env`:
 - `MONOBANK_TOKEN` - Monobank merchant API token
 - `MONOBANK_API_URL` - Monobank API base URL (default: `https://api.monobank.ua`)
 - `MONOBANK_REDIRECT_URL` - URL to redirect user after payment
-- `MONOBANK_WEBHOOK_URL` - Optional webhook URL for payment status updates
+- `MONOBANK_WEBHOOK_URL` - Webhook URL for payment status updates (e.g., `https://your-domain.com/webhook/monobank`)
 - `INVOICE_CHECK_DELAY_SECONDS` - Delay between invoice status checks (default: `60`)
 - `INVOICE_CHECK_MAX_RETRIES` - Max polling attempts before giving up (default: `30`)
