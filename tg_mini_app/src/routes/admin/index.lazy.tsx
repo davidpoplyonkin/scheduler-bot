@@ -11,7 +11,6 @@ import { AdminAppointmentsQueryOptions, VerifyProofMutationOptions } from './ind
 import { BottomButton } from '../../components/BottomButton';
 import { EmptyState } from '../../components/EmptyState';
 import SearchingIcon from '../../assets/Searching.svg?react';
-import { getServiceLabel } from '../../utils/serviceLabel';
 
 const tg = window.Telegram.WebApp;
 
@@ -34,7 +33,7 @@ function AdminList() {
       const day = dayjs.utc(result.appointmentDate).format('dd, MMM D');
       const time = dayjs.utc(result.appointmentTime, 'HH:mm:ss')
         .format('HH:mm');
-      const serviceName = getServiceLabel(t, result.service);
+      const serviceName = result.service.name;
 
       notifications.show({
         title: `${serviceName} · ${result.userName}`,
@@ -103,7 +102,7 @@ function AdminList() {
               {day.appointments.map((appt) => (
                 <Timeline.Item key={appt.id}>
                   <Text truncate='end'>
-                    {getServiceLabel(t, appt.service)} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
+                    {appt.service.name} · {appt.userFullName ?? t('user.fallbackName', { ns: 'admin', userId: appt.userId })}
                   </Text>
                   <Text
                     size='sm'

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Header
+from typing import Annotated
 
 from exceptions import AppException
 from typing import List
@@ -8,10 +9,10 @@ import datetime
 from schemas import (Role, AppointmentUserGetResponse,
                      AppointmentReserveRequest, AppointmentReserveResponse,
                      ProofGenerateRequest, ProofGenerateResponse,
-                     UserAuthSchema)
+                     UserAuthSchema, ServiceOut)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, send_notification, t,
-                   format_date, escape_markdownv2, create_calendar_event)
+                   format_date, escape_markdownv2, create_calendar_event, get_service_name)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, ADMIN_TG_ID, APPOINTMENT_DURATION_MINUTES)
 import crud
@@ -24,13 +25,26 @@ router = APIRouter(
 @router.get("/appointments", response_model=List[AppointmentUserGetResponse])
 async def get_appointments(
     session: DBSessionDep,
-    user: UserAuthSchema = Depends(authorize_current_user([Role.USER]))
+    accept_language: Annotated[str, Header()] = "en",
+    user: UserAuthSchema = Depends(authorize_current_user([Role.USER])),
 ) -> List[AppointmentUserGetResponse]:
     """
     Return future appointments for the current user
     """
+    appointments = await crud.get_user_appointments(session, user.id)
 
-    return await crud.get_user_appointments(session, user.id)
+    return [
+        AppointmentUserGetResponse(
+            id=appt.id,
+            date=appt.block.date,
+            time=appt.block.time_slot.start_time,
+            service=ServiceOut(
+                id=appt.service.id,
+                name=get_service_name(appt.service, accept_language)
+            )
+        )
+        for appt in appointments
+    ]
 
 @router.post("/appointments", response_model=AppointmentReserveResponse)
 async def reserve_appointment(

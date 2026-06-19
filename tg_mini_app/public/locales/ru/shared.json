@@ -2,9 +2,6 @@
   "buttons": {
     "submit": "Отправить"
   },
-  "labels": {
-    "serviceLabel": "Услуга {{id}}"
-  },
   "notifications": {
     "success": "Успешно",
     "errorTitle": "Ошибка",

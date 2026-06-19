@@ -16,7 +16,6 @@ import { CreateAppointmentMutationOptions } from './booking.queries';
 import { BottomButton } from '../../components/BottomButton';
 import { ChipCarousel } from '../../components/ChipCarousel';
 import { timeSlotAvailable } from '../../utils/timeSlots';
-import { getServiceLabel } from '../../utils/serviceLabel';
 import { StructuredApiError } from '../../types/error';
 
 dayjs.extend(customParseFormat);
@@ -140,7 +139,7 @@ function BookingForm() {
 
   const serviceChips = constraints.services.map((s) =>  (
     <Chip value={s.id.toString()}>
-      { getServiceLabel(t, s) }
+      { s.name }
     </Chip>
   ));
 

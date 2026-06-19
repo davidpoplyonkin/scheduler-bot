@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Header
 from typing import Annotated
 import datetime
 
-from schemas import Role, ConstraintGetResponse, BlockUserGetResponse, BlockUserGetRequest, BlockOut, BlockAggregateOut
+from schemas import Role, ConstraintGetResponse, BlockUserGetResponse, BlockUserGetRequest, BlockOut, BlockAggregateOut, ServiceOut
 from deps import authorize_current_user, DBSessionDep
-from utils import get_today_in_tz
+from utils import get_today_in_tz, get_service_name
 from config import MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS
 import crud
 
@@ -20,6 +20,7 @@ router = APIRouter(
 )
 async def get_constraints(
     session: DBSessionDep,
+    accept_language: Annotated[str, Header()] = "en",
 ) -> ConstraintGetResponse:
     """
     Return business rules required to render the date picker
@@ -28,7 +29,10 @@ async def get_constraints(
     services = await crud.get_services(session)
     return ConstraintGetResponse(
         time_slots=time_slots,
-        services=services,
+        services=[
+            ServiceOut(id=s.id, name=get_service_name(s, accept_language))
+            for s in services
+        ],
         min_advance_minutes=MIN_ADVANCE_MINUTES,
         max_advance_days=MAX_ADVANCE_DAYS,
         forbidden_weekdays=FORBIDDEN_WEEKDAYS

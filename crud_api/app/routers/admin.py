@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
+from typing import Annotated
 
 from exceptions import AppException
 from starlette import status
 import datetime
 
-from schemas import (Role, AppointmentAdminGetResponse, BlackoutCreateRequest,
-                     BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse)
+from schemas import (Role, AppointmentAdminGetResponse, AppointmentAdminOut,
+                     AppointmentAdminAggregateOut, BlackoutCreateRequest,
+                     BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse,
+                     ServiceOut)
 from deps import authorize_current_user, DBSessionDep
-from utils import verify_init_data, InitDataInvalid, InitDataExpired
+from utils import verify_init_data, InitDataInvalid, InitDataExpired, get_service_name
 from config import QR_SECRET_KEY
 import crud
 
@@ -24,26 +27,32 @@ router = APIRouter(
 )
 async def get_appointments(
     session: DBSessionDep,
+    accept_language: Annotated[str, Header()] = "en",
 ) -> AppointmentAdminGetResponse:
     appointments = await crud.get_admin_appointments(session)
 
-    # Aggregate by date
-    appointments_by_date: dict[datetime.date, list] = {}
+    # Aggregate by date with translated service names
+    appointments_by_date: dict[datetime.date, list[AppointmentAdminOut]] = {}
     for appt in appointments:
         date_key = appt.block.date
         if date_key not in appointments_by_date:
             appointments_by_date[date_key] = []
-        appointments_by_date[date_key].append({
-            "id": appt.id,
-            "time": appt.block.time_slot.start_time,
-            "user_id": appt.user_id,
-            "user_full_name": appt.user.full_name,
-            "service": appt.service,
-        })
+        appointments_by_date[date_key].append(
+            AppointmentAdminOut(
+                id=appt.id,
+                time=appt.block.time_slot.start_time,
+                user_id=appt.user_id,
+                user_full_name=appt.user.full_name,
+                service=ServiceOut(
+                    id=appt.service.id,
+                    name=get_service_name(appt.service, accept_language)
+                ),
+            )
+        )
 
     return AppointmentAdminGetResponse(
         days=[
-            {"date": date, "appointments": appts}
+            AppointmentAdminAggregateOut(date=date, appointments=appts)
             for date, appts in sorted(appointments_by_date.items())
         ]
     )
