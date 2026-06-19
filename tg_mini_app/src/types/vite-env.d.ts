@@ -24,3 +24,5 @@ svgr({
   // the build the plugin should ignore. By default no files are ignored.
   exclude: "",
 });
+
+declare const __BUILD_TIME__: string;

@@ -7,3 +7,27 @@ msgstr "Новий запис:"
 
 msgid "at"
 msgstr "о"
+
+msgid "error.dateTooSoon"
+msgstr "Занадто рано"
+
+msgid "error.dateTooFar"
+msgstr "Дата занадто далеко"
+
+msgid "error.dayUnavailable"
+msgstr "Записи недоступні в цей день"
+
+msgid "error.slotTaken"
+msgstr "Цей час вже зайнято на обрану дату."
+
+msgid "error.invalidQr"
+msgstr "Недійсний QR-код"
+
+msgid "error.qrExpired"
+msgstr "QR-код застарів"
+
+msgid "error.appointmentNotFound"
+msgstr "Запис не знайдено"
+
+msgid "error.appointmentNotOwned"
+msgstr "Запис не належить цьому користувачу"

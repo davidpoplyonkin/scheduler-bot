@@ -73,6 +73,33 @@ Users can generate signed QR codes for appointments, which admins scan to verify
 - `app/schemas/proof.py` - Request/response schemas for generate and verify
 - `src/components/BottomButton.tsx` - Unified Main/Secondary button component
 
+### Error Handling
+Structured error responses with optional `nonCritical` and `nonSensitive` fields:
+
+**Backend (`AppException`):**
+- Raise `AppException` instead of `HTTPException` for user-facing errors
+- `non_critical=True` - error is recoverable (e.g., slot taken, invalid input)
+- `non_sensitive=True` - safe to show translated message to user
+- Error details use short keys (e.g., `error.slotTaken`) translated via gettext
+
+**Frontend behavior:**
+- `nonCritical=true` → show Mantine notification, app continues
+- `nonCritical=false/undefined` → crash to TanStack Router error boundary
+- `nonSensitive=true` → show backend-translated message
+- `nonSensitive=false/undefined` → show generic "something went wrong"
+
+**Translation flow:**
+1. Frontend sends `Accept-Language` header (from i18n.language) via axios interceptor
+2. Backend exception handler reads header, translates error key via `t()` function
+3. Translations in `app/locales/[en|ru|uk]/LC_MESSAGES/messages.po`
+
+**Key files:**
+- `app/exceptions.py` - `AppException` class with `non_critical`, `non_sensitive` fields
+- `app/main.py` - Exception handler with translation
+- `src/types/error.ts` - `StructuredApiError` extending `AxiosError`
+- `src/services/crud.ts` - Axios interceptors for `Accept-Language` and error parsing
+- `src/main.tsx` - Default `throwOnError` on QueryClient
+
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
 - `Appointment` = user assigned to a block, with service selection

@@ -20,7 +20,7 @@ i18n
     defaultNS: 'shared',
     backend: {
       // query parameter cache buster
-      loadPath: '/locales/{{lng}}/{{ns}}.json?v=${__BUILD_TIME__}',
+      loadPath: `/locales/{{lng}}/{{ns}}.json?v=${__BUILD_TIME__}`,
     },
     interpolation: {
       escapeValue: false,
