@@ -7,3 +7,30 @@ msgstr "Новая запись:"
 
 msgid "at"
 msgstr "в"
+
+msgid "error.dateTooSoon"
+msgstr "Слишком рано"
+
+msgid "error.dateTooFar"
+msgstr "Дата слишком далеко"
+
+msgid "error.dayUnavailable"
+msgstr "Записи недоступны в этот день"
+
+msgid "error.slotTaken"
+msgstr "Это время уже занято на выбранную дату."
+
+msgid "error.invalidQr"
+msgstr "Недействительный QR-код"
+
+msgid "error.qrExpired"
+msgstr "QR-код устарел"
+
+msgid "error.appointmentNotFound"
+msgstr "Запись не найдена"
+
+msgid "error.appointmentNotOwned"
+msgstr "Запись не принадлежит этому пользователю"
+
+msgid "error.invoiceFailed"
+msgstr "Не удалось создать счёт на оплату"

@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Badge, Divider, Group, Timeline, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -12,7 +11,6 @@ import { AdminAppointmentsQueryOptions, VerifyProofMutationOptions } from './ind
 import { BottomButton } from '../../components/BottomButton';
 import { EmptyState } from '../../components/EmptyState';
 import SearchingIcon from '../../assets/Searching.svg?react';
-import { getServiceLabel } from '../../utils/serviceLabel';
 
 const tg = window.Telegram.WebApp;
 
@@ -35,7 +33,7 @@ function AdminList() {
       const day = dayjs.utc(result.appointmentDate).format('dd, MMM D');
       const time = dayjs.utc(result.appointmentTime, 'HH:mm:ss')
         .format('HH:mm');
-      const serviceName = getServiceLabel(t, result.service);
+      const serviceName = result.service.name;
 
       notifications.show({
         title: `${serviceName} · ${result.userName}`,
@@ -43,23 +41,7 @@ function AdminList() {
         color: 'green',
       });
     },
-    throwOnError: (error: AxiosError) => {
-      // throw an error for non-422 status codes
-      if (error.response?.status !== 422) {
-        return true; 
-      }
-
-      return false;
-    },
-    onError: (error) => {
-      if (error instanceof AxiosError && error.response?.status === 409) {
-        notifications.show({
-          title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
-          message: t('notifications.verificationFailed', { ns: 'admin' }),
-          color: 'red',
-        });
-      }
-    },
+    // throwOnError and onError removed - handled by axios interceptor
     onMutate: () => tg.SecondaryButton.showProgress(),
     onSettled: () => tg.SecondaryButton.hideProgress(),
   });
@@ -121,7 +103,7 @@ function AdminList() {
                 <Timeline.Item key={appt.id}>
                   <Group gap='xs'>
                     <Text truncate='end'>
-                      {getServiceLabel(t, appt.service)}
+                      {appt.service.name}
                     </Text>
                     <Badge size='sm' variant='outline'>
                       {t(`statuses.${appt.status}`, { ns: 'shared' })}

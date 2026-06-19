@@ -1,6 +1,7 @@
 import gettext
 import datetime
 from pathlib import Path
+from models import Service
 
 from babel.dates import format_date as babel_format_date
 
@@ -37,3 +38,9 @@ def format_date(date: datetime.date, lang: str | None) -> str:
     lang = lang if lang in SUPPORTED_LANGS else "en"
     locale = LANG_TO_LOCALE.get(lang, "en_US")
     return babel_format_date(date, format="EEE, MMM d", locale=locale)
+
+
+def get_service_name(service: Service, lang: str | None) -> str:
+    """Get service name in the requested language with English fallback."""
+    translations = {tr.language_code: tr.name for tr in service.translations}
+    return translations.get(lang) or translations.get("en") or f"Service {service.id}"

@@ -8,8 +8,6 @@
   },
   "notifications": {
     "blackoutCreated": "Слоты успешно закрыты",
-    "verificationFailedTitle": "Ошибка проверки",
-    "verificationFailed": "Просроченный или недействительный QR-код",
     "invalidQrTitle": "Неверный QR",
     "invalidQrMessage": "Не удалось прочитать QR-код"
   },

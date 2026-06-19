@@ -18,8 +18,20 @@ import { routeTree } from './routeTree.gen';
 import { generateShades } from './utils/shades';
 
 import { useThemeStore } from './stores/ThemeStore';
+import { StructuredApiError } from './types/error';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: {
+      throwOnError: (error) => {
+        if (error instanceof StructuredApiError) {
+          return !error.nonCritical; // throw only if critical
+        }
+        return true; // throw unstructured errors
+      },
+    },
+  },
+});
 
 // Create a new router instance
 const router = createRouter({

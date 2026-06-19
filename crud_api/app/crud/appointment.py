@@ -3,7 +3,9 @@ from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
+from fastapi import status
+
+from exceptions import AppException
 from typing import List
 import datetime
 
@@ -62,10 +64,12 @@ async def reserve_appointment(
         block_result = await session.execute(block_stmt)
         block_id = block_result.scalar_one_or_none()
 
-        if block_id is None:  # block already exists
-            raise HTTPException(
+        if block_id is None:   # block already exists
+            raise AppException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Time slot is already reserved for the selected date."
+                detail="error.slotTaken",
+                non_critical=True,
+                non_sensitive=True,
             )
 
         # Insert the Appointment with status=PENDING, invoice_id=NULL
@@ -101,9 +105,10 @@ async def reserve_appointment(
         return appointment
     except IntegrityError:
         await session.rollback()
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Invalid time slot or service provided."
+            detail="Invalid time slot or service provided.",
+            non_critical=False,
         )
 
 

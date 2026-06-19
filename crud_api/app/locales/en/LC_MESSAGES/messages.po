@@ -7,3 +7,30 @@ msgstr "New booking:"
 
 msgid "at"
 msgstr "at"
+
+msgid "error.dateTooSoon"
+msgstr "Date is too soon"
+
+msgid "error.dateTooFar"
+msgstr "Date is too far in advance"
+
+msgid "error.dayUnavailable"
+msgstr "Appointments not available on this day"
+
+msgid "error.slotTaken"
+msgstr "Time slot is already reserved for the selected date."
+
+msgid "error.invalidQr"
+msgstr "Invalid QR code signature"
+
+msgid "error.qrExpired"
+msgstr "QR code has expired"
+
+msgid "error.appointmentNotFound"
+msgstr "Appointment not found"
+
+msgid "error.appointmentNotOwned"
+msgstr "Appointment does not belong to this user"
+
+msgid "error.invoiceFailed"
+msgstr "Failed to create payment invoice"

@@ -8,8 +8,6 @@
   },
   "notifications": {
     "blackoutCreated": "Blackout created successfully",
-    "verificationFailedTitle": "Verification failed",
-    "verificationFailed": "Expired or invalid QR",
     "invalidQrTitle": "Invalid QR",
     "invalidQrMessage": "Could not parse QR code"
   },

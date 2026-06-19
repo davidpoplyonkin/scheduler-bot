@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status, Header
+from typing import Annotated
+
+from exceptions import AppException
 from typing import List
 import asyncio
 import datetime
@@ -6,10 +9,10 @@ import datetime
 from schemas import (Role, AppointmentUserGetResponse,
                      AppointmentReserveRequest, AppointmentReserveResponse,
                      ProofGenerateRequest, ProofGenerateResponse,
-                     UserAuthSchema)
+                     UserAuthSchema, ServiceOut)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, create_invoice,
-                   schedule_invoice_check)
+                   schedule_invoice_check, get_service_name)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, INVOICE_CHECK_MAX_RETRIES)
 import crud
@@ -22,13 +25,27 @@ router = APIRouter(
 @router.get("/appointments", response_model=List[AppointmentUserGetResponse])
 async def get_appointments(
     session: DBSessionDep,
-    user: UserAuthSchema = Depends(authorize_current_user([Role.USER]))
+    accept_language: Annotated[str, Header()] = "en",
+    user: UserAuthSchema = Depends(authorize_current_user([Role.USER])),
 ) -> List[AppointmentUserGetResponse]:
     """
     Return future appointments for the current user
     """
+    appointments = await crud.get_user_appointments(session, user.id)
 
-    return await crud.get_user_appointments(session, user.id)
+    return [
+        AppointmentUserGetResponse(
+            id=appt.id,
+            date=appt.block.date,
+            time=appt.block.time_slot.start_time,
+            service=ServiceOut(
+                id=appt.service.id,
+                name=get_service_name(appt.service, accept_language)
+            ),
+            status=appt.status
+        )
+        for appt in appointments
+    ]
 
 @router.post("/appointments", response_model=AppointmentReserveResponse)
 async def reserve_appointment(
@@ -44,21 +61,27 @@ async def reserve_appointment(
     max_date = (now + datetime.timedelta(days=MAX_ADVANCE_DAYS)).date()
 
     if request.date < min_date:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too soon"
+            detail="error.dateTooSoon",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     if request.date > max_date:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too far in advance"
+            detail="error.dateTooFar",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     if request.date.weekday() in FORBIDDEN_WEEKDAYS:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Appointments not available on this day"
+            detail="error.dayUnavailable",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     appointment = await crud.reserve_appointment(
@@ -78,9 +101,11 @@ async def reserve_appointment(
 
     if invoice_result is None:
         await crud.cancel_appointment_invoice(session, appointment.id)
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to create payment invoice."
+            detail="error.invoiceFailed",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     appointment = await crud.confirm_appointment_invoice(

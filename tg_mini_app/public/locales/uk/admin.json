@@ -8,8 +8,6 @@
   },
   "notifications": {
     "blackoutCreated": "Слоти успішно закрито",
-    "verificationFailedTitle": "Помилка перевірки",
-    "verificationFailed": "Прострочений або недійсний QR-код",
     "invalidQrTitle": "Невірний QR",
     "invalidQrMessage": "Не вдалося прочитати QR-код"
   },

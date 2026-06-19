@@ -2,7 +2,6 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import { Chip, Flex, Text, useMatches } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
-import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
@@ -10,14 +9,13 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 
 import { BlocksQueryOptions } from '../index.queries';
 import { CreateAppointmentMutationOptions } from './booking.queries';
 import { BottomButton } from '../../components/BottomButton';
 import { ChipCarousel } from '../../components/ChipCarousel';
 import { timeSlotAvailable } from '../../utils/timeSlots';
-import { getServiceLabel } from '../../utils/serviceLabel';
+import { StructuredApiError } from '../../types/error';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -79,24 +77,11 @@ function BookingForm() {
       tg.openLink(data.paymentUrl);
       tg.close();
     },
-    throwOnError: (error: AxiosError) => {
-      // throw an error for non-409 status codes
-      if (error.response?.status !== 409) {
-        return true; 
-      }
-
-      return false;
-    },
     onError: (error) => {
-      // If the chosen slot was booked while the user was filling the form
-      if (error instanceof AxiosError && error.response?.status === 409) {
-        // Show an error message
-        notifications.show({
-          title: t('notifications.slotUnavailableTitle', { ns: 'user' }),
-          message: t('notifications.slotUnavailable', { ns: 'user' }),
-          color: 'red',
-        });
-
+      // If the chosen slot was booked while the user was filling the form,
+      // reset the form so they can pick another slot.
+      // Notification is shown by the axios interceptor.
+      if (error instanceof StructuredApiError && error.nonCritical) {
         form.setFieldValue('date', null);
         form.setFieldValue('slot', null);
       }
@@ -147,7 +132,7 @@ function BookingForm() {
 
   const serviceChips = constraints.services.map((s) =>  (
     <Chip value={s.id.toString()}>
-      { getServiceLabel(t, s) }
+      { s.name }
     </Chip>
   ));
 
