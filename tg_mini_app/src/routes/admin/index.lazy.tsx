@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Divider, Timeline, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useTranslation } from 'react-i18next';
-import { AxiosError } from 'axios';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -43,23 +42,7 @@ function AdminList() {
         color: 'green',
       });
     },
-    throwOnError: (error: AxiosError) => {
-      // throw an error for non-422 status codes
-      if (error.response?.status !== 422) {
-        return true; 
-      }
-
-      return false;
-    },
-    onError: (error) => {
-      if (error instanceof AxiosError && error.response?.status === 409) {
-        notifications.show({
-          title: t('notifications.verificationFailedTitle', { ns: 'admin' }),
-          message: t('notifications.verificationFailed', { ns: 'admin' }),
-          color: 'red',
-        });
-      }
-    },
+    // throwOnError and onError removed - handled by axios interceptor
     onMutate: () => tg.SecondaryButton.showProgress(),
     onSettled: () => tg.SecondaryButton.hideProgress(),
   });

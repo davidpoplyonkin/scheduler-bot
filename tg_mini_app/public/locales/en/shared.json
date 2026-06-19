@@ -3,10 +3,12 @@
     "submit": "Submit"
   },
   "labels": {
-    "serviceLabel": "Service {{id}}" 
+    "serviceLabel": "Service {{id}}"
   },
   "notifications": {
-    "success": "Success"
+    "success": "Success",
+    "errorTitle": "Error",
+    "genericError": "Something went wrong"
   },
   "datetime": {
     "at": "at"

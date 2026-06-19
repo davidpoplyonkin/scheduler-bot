@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+
+from exceptions import AppException
 from starlette import status
 import datetime
 
@@ -86,14 +88,18 @@ async def verify_proof(
     try:
         verify_init_data(data, QR_SECRET_KEY)
     except InitDataInvalid:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Invalid QR code signature",
+            non_critical=True,
+            non_sensitive=True,
         )
     except InitDataExpired:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="QR code has expired",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     # Fetch and verify ownership
@@ -103,15 +109,19 @@ async def verify_proof(
     )
 
     if appointment is None:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Appointment not found",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     if appointment.user_id != request.claimant_id:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Appointment does not belong to this user",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     # Success

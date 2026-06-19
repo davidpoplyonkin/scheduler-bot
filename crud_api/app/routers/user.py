@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
+
+from exceptions import AppException
 from typing import List
 import asyncio
 import datetime
@@ -44,21 +46,27 @@ async def reserve_appointment(
     max_date = (now + datetime.timedelta(days=MAX_ADVANCE_DAYS)).date()
 
     if request.date < min_date:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too soon"
+            detail="Date is too soon",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     if request.date > max_date:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too far in advance"
+            detail="Date is too far in advance",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     if request.date.weekday() in FORBIDDEN_WEEKDAYS:
-        raise HTTPException(
+        raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Appointments not available on this day"
+            detail="Appointments not available on this day",
+            non_critical=True,
+            non_sensitive=True,
         )
 
     appointment = await crud.reserve_appointment(

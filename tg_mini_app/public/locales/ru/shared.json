@@ -3,10 +3,12 @@
     "submit": "Отправить"
   },
   "labels": {
-    "serviceLabel": "Услуга {{id}}" 
+    "serviceLabel": "Услуга {{id}}"
   },
   "notifications": {
-    "success": "Успешно"
+    "success": "Успешно",
+    "errorTitle": "Ошибка",
+    "genericError": "Что-то пошло не так"
   },
   "datetime": {
     "at": "в"
