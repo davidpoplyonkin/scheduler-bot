@@ -48,7 +48,7 @@ async def reserve_appointment(
     if request.date < min_date:
         raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too soon",
+            detail="error.dateTooSoon",
             non_critical=True,
             non_sensitive=True,
         )
@@ -56,7 +56,7 @@ async def reserve_appointment(
     if request.date > max_date:
         raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Date is too far in advance",
+            detail="error.dateTooFar",
             non_critical=True,
             non_sensitive=True,
         )
@@ -64,7 +64,7 @@ async def reserve_appointment(
     if request.date.weekday() in FORBIDDEN_WEEKDAYS:
         raise AppException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Appointments not available on this day",
+            detail="error.dayUnavailable",
             non_critical=True,
             non_sensitive=True,
         )

@@ -61,7 +61,7 @@ async def reserve_appointment(
         if block is None:  # block already exists
             raise AppException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Time slot is already reserved for the selected date.",
+                detail="error.slotTaken",
                 non_critical=True,
                 non_sensitive=True,
             )

@@ -10,6 +10,12 @@ const crud_api = axios.create({
   withCredentials: true,
 });
 
+// Set Accept-Language header for backend error translation
+crud_api.interceptors.request.use((config) => {
+  config.headers['Accept-Language'] = i18n.language;
+  return config;
+});
+
 crud_api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

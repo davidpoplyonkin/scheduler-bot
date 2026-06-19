@@ -90,14 +90,14 @@ async def verify_proof(
     except InitDataInvalid:
         raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Invalid QR code signature",
+            detail="error.invalidQr",
             non_critical=True,
             non_sensitive=True,
         )
     except InitDataExpired:
         raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="QR code has expired",
+            detail="error.qrExpired",
             non_critical=True,
             non_sensitive=True,
         )
@@ -111,7 +111,7 @@ async def verify_proof(
     if appointment is None:
         raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Appointment not found",
+            detail="error.appointmentNotFound",
             non_critical=True,
             non_sensitive=True,
         )
@@ -119,7 +119,7 @@ async def verify_proof(
     if appointment.user_id != request.claimant_id:
         raise AppException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Appointment does not belong to this user",
+            detail="error.appointmentNotOwned",
             non_critical=True,
             non_sensitive=True,
         )
