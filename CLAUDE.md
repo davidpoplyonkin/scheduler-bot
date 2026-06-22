@@ -47,6 +47,7 @@ alembic -c app/alembic.ini revision --autogenerate -m "description"
 - **API Client**: `src/services/crud.ts` - Axios with 401 interceptor for auto token refresh
 - **Auth**: `src/utils/auth.ts` - Exchanges Telegram InitData for JWT
 - **Localization**: i18next with `public/locales/[en|ru|uk]/` JSON files
+- **Types**: `src/types/Service.ts` defines `ServiceBasicIn` (id, name) and `ServiceIn` (with pricing) mirroring backend schemas
 
 ### Backend
 - **Routers**: `app/routers/` - auth, user, admin, shared, webhook
@@ -103,11 +104,12 @@ Structured error responses with optional `nonCritical` and `nonSensitive` fields
 ### Payment Flow (Monobank Acquiring)
 Appointment booking integrates with Monobank to create payment invoices:
 1. `POST /user/appointments` creates Block + Appointment with `status=PENDING`, `invoice_id=NULL`
-2. Backend calls Monobank `POST /api/merchant/invoice/create` with service pricing
-3. On success: appointment updated with `invoice_id`, response includes `payment_url`
-4. On failure: Block deleted, appointment `status=CANCELLED`
-5. User redirected to `payment_url` (Monobank hosted payment page)
-6. Backend schedules invoice status polling via APScheduler
+2. If `service.amount_minor == 0` (free service): skip payment, call `on_payment_success()` directly, return `payment_url=null`
+3. Otherwise, backend calls Monobank `POST /api/merchant/invoice/create` with service pricing
+4. On success: appointment updated with `invoice_id`, response includes `payment_url`
+5. On failure: Block deleted, appointment `status=CANCELLED`
+6. User redirected to `payment_url` (Monobank hosted payment page), or to `/user` for free services
+7. Backend schedules invoice status polling via APScheduler (paid services only)
 
 **Invoice Status Polling:**
 - `schedule_invoice_check()` schedules a job to poll Monobank `GET /api/merchant/invoice/status`
@@ -134,7 +136,8 @@ Appointment booking integrates with Monobank to create payment invoices:
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
 - `Appointment` = user assigned to a block, with service selection and `invoice_id`
-- `Service` = appointment type with translations (ServiceTranslation) and pricing (`amount_minor`, `currency_code`)
+- `Service` = appointment type with translations (ServiceTranslation) and pricing (`amount_minor`, `currency_code`). Free services have `amount_minor=0`
+- `ServiceBasicOut` = service schema without pricing (for appointment displays); `ServiceOut` extends it with pricing (for booking form)
 - Role determined by `tg_id == ADMIN_TG_ID` env var
 
 ## Environment Variables
