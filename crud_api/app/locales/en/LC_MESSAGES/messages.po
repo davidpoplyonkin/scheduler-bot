@@ -31,3 +31,15 @@ msgstr "Appointment not found"
 
 msgid "error.appointmentNotOwned"
 msgstr "Appointment does not belong to this user"
+
+msgid "error.invoiceFailed"
+msgstr "Failed to create payment invoice"
+
+msgid "error.appointmentPending"
+msgstr "Appointment payment not yet confirmed"
+
+msgid "error.appointmentCancelled"
+msgstr "Appointment has been cancelled"
+
+msgid "error.appointmentAlreadyCompleted"
+msgstr "Appointment has already been completed"

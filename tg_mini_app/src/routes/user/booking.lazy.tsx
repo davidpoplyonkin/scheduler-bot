@@ -1,8 +1,7 @@
-import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
+import { createLazyFileRoute } from '@tanstack/react-router'
 import { Chip, Flex, Text, useMatches } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
-import { notifications } from '@mantine/notifications';
 import { useState, useRef, useEffect } from 'react';
 import { useElementSize } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
@@ -68,21 +67,15 @@ function BookingForm() {
     },
   });
 
-  // Redirect the user upon submission
-  const navigate = useNavigate();
   const mutation = useMutation({
     ...CreateAppointmentMutationOptions,
-    onSuccess: () => {
-      // Ensure that the home page shows the new appointment
+    onSuccess: (data) => {
+      // Invalidate queries so returning user sees fresh data
       queryClient.invalidateQueries({ queryKey: ['user-appointments'] });
-      navigate({ to: '/user' });
 
-      // Show a success message
-      notifications.show({
-        title: t('notifications.success', { ns: 'shared' }),
-        message: t('notifications.appointmentBooked', { ns: 'user' }),
-        color: 'green',
-      });
+      // Open payment page in external browser and close mini app
+      tg.openLink(data.paymentUrl);
+      tg.close();
     },
     onError: (error) => {
       // If the chosen slot was booked while the user was filling the form,

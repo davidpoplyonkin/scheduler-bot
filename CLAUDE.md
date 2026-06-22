@@ -49,7 +49,7 @@ alembic -c app/alembic.ini revision --autogenerate -m "description"
 - **Localization**: i18next with `public/locales/[en|ru|uk]/` JSON files
 
 ### Backend
-- **Routers**: `app/routers/` - auth, user, admin, shared
+- **Routers**: `app/routers/` - auth, user, admin, shared, webhook
 - **Models**: `app/models/` - User, TimeSlot, Block, Appointment, Blackout, Service
 - **Auth**: `app/deps/auth.py` - RBAC decorator; `app/utils/init_data.py` - InitData verification + JWT
 - **Database**: Async SQLAlchemy with AsyncPG, Alembic migrations in `app/migrations/`
@@ -100,10 +100,41 @@ Structured error responses with optional `nonCritical` and `nonSensitive` fields
 - `src/services/crud.ts` - Axios interceptors for `Accept-Language` and error parsing
 - `src/main.tsx` - Default `throwOnError` on QueryClient
 
+### Payment Flow (Monobank Acquiring)
+Appointment booking integrates with Monobank to create payment invoices:
+1. `POST /user/appointments` creates Block + Appointment with `status=PENDING`, `invoice_id=NULL`
+2. Backend calls Monobank `POST /api/merchant/invoice/create` with service pricing
+3. On success: appointment updated with `invoice_id`, response includes `payment_url`
+4. On failure: Block deleted, appointment `status=CANCELLED`
+5. User redirected to `payment_url` (Monobank hosted payment page)
+6. Backend schedules invoice status polling via APScheduler
+
+**Invoice Status Polling:**
+- `schedule_invoice_check()` schedules a job to poll Monobank `GET /api/merchant/invoice/status`
+- Polls every `INVOICE_CHECK_DELAY_SECONDS` (default: 60s), up to `INVOICE_CHECK_MAX_RETRIES` (default: 30)
+- On `success`: appointment `status=CONFIRMED`, calendar event created, admin notified
+- On `failure`/`expired`/`reversed`: Block deleted, appointment `status=CANCELLED`
+- On `created`/`processing`: reschedule check (countdown `retries_left`)
+
+**Webhook Endpoint:**
+- `POST /webhook/monobank` receives payment status updates from Monobank
+- ECDSA signature verification via `MonobankWebhookPayload` dependency (public key cached, refreshed on failure)
+- On terminal status (`success`/`failure`/`reversed`): cancels polling job via `cancel_invoice_check()`
+- Handles status same as polling: `on_payment_success()` or `cancel_appointment_invoice()`
+- Note: Monobank does NOT send webhook for `expired` status, so polling remains the fallback
+
+**Key files:**
+- `app/utils/monobank.py` - `create_invoice()`, `get_invoice_status()`
+- `app/utils/invoice_checker.py` - `schedule_invoice_check()`, `check_invoice_status()`, `cancel_invoice_check()`, `on_payment_success()`
+- `app/schemas/monobank.py` - `InvoiceStatus` enum, `InvoiceCreateRequest`, `InvoiceCreateResponse`, `InvoiceStatusResponse`
+- `app/crud/appointment.py` - `confirm_appointment_invoice()`, `cancel_appointment_invoice()`, `confirm_appointment_payment()`
+- `app/routers/webhook.py` - `POST /webhook/monobank` endpoint
+- `app/deps/monobank.py` - `MonobankWebhookPayload` dependency with ECDSA signature verification
+
 ### Key Schema
 - `Block` = date + time slot (either admin blackout or user appointment)
-- `Appointment` = user assigned to a block, with service selection
-- `Service` = appointment type with translations (ServiceTranslation)
+- `Appointment` = user assigned to a block, with service selection and `invoice_id`
+- `Service` = appointment type with translations (ServiceTranslation) and pricing (`amount_minor`, `currency_code`)
 - Role determined by `tg_id == ADMIN_TG_ID` env var
 
 ## Environment Variables
@@ -120,3 +151,9 @@ Required in `.env`:
 - `MAX_ADVANCE_DAYS` - Maximum days in advance a slot can be booked
 - `FORBIDDEN_WEEKDAYS` - Comma-separated weekday numbers to block (default: `5,6` for Sat/Sun)
 - `ADMIN_GOOGLE_EMAIL` - Admin's email for Google Calendar events
+- `MONOBANK_TOKEN` - Monobank merchant API token
+- `MONOBANK_API_URL` - Monobank API base URL (default: `https://api.monobank.ua`)
+- `MONOBANK_REDIRECT_URL` - URL to redirect user after payment
+- `MONOBANK_WEBHOOK_URL` - Webhook URL for payment status updates (e.g., `https://your-domain.com/webhook/monobank`)
+- `INVOICE_CHECK_DELAY_SECONDS` - Delay between invoice status checks (default: `60`)
+- `INVOICE_CHECK_MAX_RETRIES` - Max polling attempts before giving up (default: `30`)

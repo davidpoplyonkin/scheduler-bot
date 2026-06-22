@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete, update
 from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
@@ -10,6 +10,7 @@ from typing import List
 import datetime
 
 from models import Appointment, Block, TimeSlot, User, Service
+from models.appointment import AppointmentStatus
 from utils import get_today_in_tz
 
 async def get_user_appointments(
@@ -25,7 +26,12 @@ async def get_user_appointments(
         .join(Block.time_slot)
         .where(
             Appointment.user_id == user_id,
-            Block.date >= today_date
+            Block.date >= today_date,
+            Appointment.status.in_([
+                AppointmentStatus.PENDING,
+                AppointmentStatus.CONFIRMED,
+                AppointmentStatus.COMPLETED,
+            ]),
         )
         .order_by(Block.date, TimeSlot.start_time)
         .options(
@@ -54,29 +60,34 @@ async def reserve_appointment(
             .on_conflict_do_nothing(index_elements=["date", "time_slot_id"])
             .returning(Block.id)
         )
-        
-        block_result = await session.execute(block_stmt)
-        block = block_result.scalar_one_or_none()
 
-        if block is None:  # block already exists
+        block_result = await session.execute(block_stmt)
+        block_id = block_result.scalar_one_or_none()
+
+        if block_id is None:   # block already exists
             raise AppException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="error.slotTaken",
                 non_critical=True,
                 non_sensitive=True,
             )
-        
-        # Insert the Appointment
+
+        # Insert the Appointment with status=PENDING, invoice_id=NULL
         appt_stmt = (
             insert(Appointment)
-            .values(user_id=user_id, block_id=block, service_id=service_id)
-            .returning(Appointment)
+            .values(
+                user_id=user_id,
+                block_id=block_id,
+                service_id=service_id,
+                status=AppointmentStatus.PENDING,
+            )
+            .returning(Appointment.id)
         )
 
         appt_result = await session.execute(appt_stmt)
-        appointment = appt_result.scalar_one()
+        appointment_id = appt_result.scalar_one()
 
-        # Return eagerly loaded appointment with block and time slot details
+        # Fetch appointment eagerly with block, time_slot, and service
         eager_stmt = (
             select(Appointment)
             .options(
@@ -84,13 +95,14 @@ async def reserve_appointment(
                 .joinedload(Block.time_slot),
                 joinedload(Appointment.service)
             )
-            .where(Appointment.id == appointment.id)
+            .where(Appointment.id == appointment_id)
         )
-        
+
         eager_result = await session.execute(eager_stmt)
+        appointment = eager_result.unique().scalar_one()
 
         await session.commit()
-        return eager_result.unique().scalar_one()
+        return appointment
     except IntegrityError:
         await session.rollback()
         raise AppException(
@@ -98,6 +110,95 @@ async def reserve_appointment(
             detail="Invalid time slot or service provided.",
             non_critical=False,
         )
+
+
+async def confirm_appointment_invoice(
+    session: AsyncSession,
+    appointment_id: int,
+    invoice_id: str,
+) -> Appointment:
+    """Update appointment with invoice_id after successful payment creation."""
+    stmt = (
+        update(Appointment)
+        .where(Appointment.id == appointment_id)
+        .values(invoice_id=invoice_id)
+    )
+    await session.execute(stmt)
+    await session.commit()
+
+    # Re-fetch with eager loading
+    eager_stmt = (
+        select(Appointment)
+        .options(
+            joinedload(Appointment.block).joinedload(Block.time_slot),
+            joinedload(Appointment.service).joinedload(Service.translations),
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(eager_stmt)
+    return result.unique().scalar_one()
+
+
+async def cancel_appointment_invoice(
+    session: AsyncSession,
+    appointment_id: int,
+) -> None:
+    """Cancel appointment and delete block after failed payment creation."""
+    # Update appointment status to CANCELLED and get block_id (only if PENDING)
+    stmt = (
+        update(Appointment)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.status == AppointmentStatus.PENDING,
+        )
+        .values(status=AppointmentStatus.CANCELLED)
+        .returning(Appointment.block_id)
+    )
+    result = await session.execute(stmt)
+    block_id = result.scalar_one_or_none()
+
+    # Delete block (appointment.block_id becomes NULL via ON DELETE SET NULL)
+    if block_id is not None:
+        await session.execute(delete(Block).where(Block.id == block_id))
+
+    await session.commit()
+
+
+async def confirm_appointment_payment(
+    session: AsyncSession,
+    appointment_id: int,
+) -> Appointment | None:
+    """Mark appointment as CONFIRMED after successful payment."""
+    stmt = (
+        update(Appointment)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.status == AppointmentStatus.PENDING,
+        )
+        .values(status=AppointmentStatus.CONFIRMED)
+        .returning(Appointment.id)
+    )
+    result = await session.execute(stmt)
+    updated_id = result.scalar_one_or_none()
+
+    if updated_id is None:
+        await session.commit()
+        return None
+
+    await session.commit()
+
+    # Re-fetch with eager loading including service translations
+    eager_stmt = (
+        select(Appointment)
+        .options(
+            joinedload(Appointment.block).joinedload(Block.time_slot),
+            joinedload(Appointment.user),
+            joinedload(Appointment.service).joinedload(Service.translations),
+        )
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(eager_stmt)
+    return result.unique().scalar_one_or_none()
 
 
 async def get_admin_appointments(
@@ -124,18 +225,55 @@ async def get_admin_appointments(
     return results.unique().scalars().all()
 
 
-async def get_appointment_with_user(
+async def complete_appointment(
     session: AsyncSession,
     appointment_id: int,
+    user_id: int,
 ) -> Appointment | None:
-    statement = (
+    """
+    Mark appointment as COMPLETED after verification, otherwise return None.
+    """
+    stmt = (
+        update(Appointment)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.user_id == user_id,
+            Appointment.status == AppointmentStatus.CONFIRMED,
+        )
+        .values(status=AppointmentStatus.COMPLETED)
+        .returning(Appointment.id)
+    )
+    result = await session.execute(stmt)
+    updated_id = result.scalar_one_or_none()
+
+    if updated_id is None:
+        await session.commit()
+        return None
+
+    await session.commit()
+
+    # Re-fetch with eager loading
+    eager_stmt = (
         select(Appointment)
         .options(
             joinedload(Appointment.block).joinedload(Block.time_slot),
             joinedload(Appointment.user),
-            joinedload(Appointment.service)
+            joinedload(Appointment.service),
         )
         .where(Appointment.id == appointment_id)
     )
-    result = await session.execute(statement)
+    result = await session.execute(eager_stmt)
     return result.unique().scalar_one_or_none()
+
+
+async def get_appointment_by_id(
+    session: AsyncSession,
+    appointment_id: int,
+) -> Appointment | None:
+    """Fetch appointment by ID with minimal relations for error diagnosis."""
+    statement = (
+        select(Appointment)
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(statement)
+    return result.scalar_one_or_none()

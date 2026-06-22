@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import router_auth, router_user, router_admin, router_shared
+from routers import router_auth, router_user, router_admin, router_shared, router_webhook
 from config import API_ALLOW_ORIGINS
 from exceptions import AppException
 from utils.translations import t
@@ -35,6 +35,7 @@ app.include_router(router_auth)
 app.include_router(router_user)
 app.include_router(router_admin)
 app.include_router(router_shared)
+app.include_router(router_webhook)
 
 # Add CORS middleware
 app.add_middleware(

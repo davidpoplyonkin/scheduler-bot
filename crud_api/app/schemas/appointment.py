@@ -3,6 +3,7 @@ import datetime
 
 from .config import config_dict
 from .service import ServiceOut
+from models.appointment import AppointmentStatus
 
 class AppointmentUserGetResponse(BaseModel):
     id: int
@@ -11,6 +12,7 @@ class AppointmentUserGetResponse(BaseModel):
         validation_alias=AliasPath("block", "time_slot", "start_time")
     )
     service: ServiceOut
+    status: AppointmentStatus
 
     model_config = config_dict
 
@@ -25,6 +27,7 @@ class AppointmentReserveResponse(BaseModel):
     id: int
     date: datetime.date
     time: datetime.time
+    payment_url: str
 
     model_config = config_dict
 
@@ -35,6 +38,7 @@ class AppointmentAdminOut(BaseModel):
     user_id: int
     user_full_name: str | None
     service: ServiceOut
+    status: AppointmentStatus
 
     model_config = config_dict
 

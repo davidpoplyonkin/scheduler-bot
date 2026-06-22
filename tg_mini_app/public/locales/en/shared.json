@@ -14,5 +14,10 @@
     "loading": "Loading...",
     "error": "Fatal error",
     "noAppointments": "No scheduled appointments yet"
+  },
+  "statuses": {
+    "PENDING": "Pending",
+    "CONFIRMED": "Confirmed",
+    "COMPLETED": "Completed"
   }
 }

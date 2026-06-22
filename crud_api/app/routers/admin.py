@@ -9,6 +9,7 @@ from schemas import (Role, AppointmentAdminGetResponse, AppointmentAdminOut,
                      AppointmentAdminAggregateOut, BlackoutCreateRequest,
                      BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse,
                      ServiceOut)
+from models.appointment import AppointmentStatus
 from deps import authorize_current_user, DBSessionDep
 from utils import verify_init_data, InitDataInvalid, InitDataExpired, get_service_name
 from config import QR_SECRET_KEY
@@ -47,6 +48,7 @@ async def get_appointments(
                     id=appt.service.id,
                     name=get_service_name(appt.service, accept_language)
                 ),
+                status=appt.status,
             )
         )
 
@@ -84,6 +86,7 @@ async def create_blackout(
 async def verify_proof(
     session: DBSessionDep,
     request: ProofVerifyRequest,
+    accept_language: Annotated[str, Header()] = "en",
 ) -> ProofVerifyResponse:
     # Build data dict for verification (include hash)
     data = {
@@ -111,11 +114,28 @@ async def verify_proof(
             non_sensitive=True,
         )
 
-    # Fetch and verify ownership
-    appointment = await crud.get_appointment_with_user(
+    # Optimistic update: try to complete appointment with conditions
+    appointment = await crud.complete_appointment(
         session,
-        request.appointment_id
+        request.appointment_id,
+        request.claimant_id,
     )
+
+    # Success - appointment was CONFIRMED and owned by claimant
+    if appointment is not None:
+        return ProofVerifyResponse(
+            appointment_id=request.appointment_id,
+            user_name=appointment.user.full_name or f"User {appointment.user_id}",
+            appointment_date=appointment.block.date,
+            appointment_time=appointment.block.time_slot.start_time,
+            service=ServiceOut(
+                id=appointment.service.id,
+                name=get_service_name(appointment.service, accept_language),
+            )
+        )
+
+    # Update failed - fetch appointment to determine the cause
+    appointment = await crud.get_appointment_by_id(session, request.appointment_id)
 
     if appointment is None:
         raise AppException(
@@ -133,11 +153,32 @@ async def verify_proof(
             non_sensitive=True,
         )
 
-    # Success
-    return ProofVerifyResponse(
-        appointment_id=request.appointment_id,
-        user_name=appointment.user.full_name or f"User {appointment.user_id}",
-        appointment_date=appointment.block.date,
-        appointment_time=appointment.block.time_slot.start_time,
-        service=appointment.service,
+    # Status-specific errors
+    if appointment.status == AppointmentStatus.PENDING:
+        raise AppException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="error.appointmentPending",
+            non_critical=True,
+            non_sensitive=True,
+        )
+    elif appointment.status == AppointmentStatus.CANCELLED:
+        raise AppException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="error.appointmentCancelled",
+            non_critical=True,
+            non_sensitive=True,
+        )
+    elif appointment.status == AppointmentStatus.COMPLETED:
+        raise AppException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="error.appointmentAlreadyCompleted",
+            non_critical=True,
+            non_sensitive=True,
+        )
+    
+    raise AppException(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        detail="error.invalidAppointmentStatus",
+        non_critical=True,
+        non_sensitive=False,
     )

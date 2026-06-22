@@ -51,6 +51,15 @@ declare module '@tanstack/react-router' {
 
 const tg = window.Telegram.WebApp;
 
+const resolver: CSSVariablesResolver = (_theme) => ({
+  variables: {},
+  light: {},
+  dark: {
+    '--mantine-primary-color-light': 'var(--mantine-primary-color-8)',
+    '--mantine-color-tgPrimaryColor-outline': 'var(--mantine-primary-color-7)',
+  },
+});
+
 function Root() {
   const colorScheme = useThemeStore((state) => state.colorScheme);
   const primaryColor = useThemeStore((state) => state.primaryColor);
@@ -93,14 +102,6 @@ function Root() {
     primaryColor: 'tgPrimaryColor',
     primaryShade: 7,
   });
-
-  const resolver: CSSVariablesResolver = (_theme) => ({
-  variables: {},
-  light: {},
-  dark: {
-    '--mantine-primary-color-light': 'var(--mantine-primary-color-8)',
-  },
-});
 
   return (
     <StrictMode>

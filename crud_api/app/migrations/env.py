@@ -4,6 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+import alembic_postgresql_enum
 
 from models import *
 from database import Base

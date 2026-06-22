@@ -14,5 +14,10 @@
     "loading": "Загрузка...",
     "error": "Критическая ошибка",
     "noAppointments": "Записей пока нет"
+  },
+  "statuses": {
+    "PENDING": "Ожидает",
+    "CONFIRMED": "Подтверждено",
+    "COMPLETED": "Завершено"
   }
 }

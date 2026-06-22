@@ -31,3 +31,15 @@ msgstr "Запис не знайдено"
 
 msgid "error.appointmentNotOwned"
 msgstr "Запис не належить цьому користувачу"
+
+msgid "error.invoiceFailed"
+msgstr "Не вдалося створити рахунок на оплату"
+
+msgid "error.appointmentPending"
+msgstr "Оплата запису ще не підтверджена"
+
+msgid "error.appointmentCancelled"
+msgstr "Запис було скасовано"
+
+msgid "error.appointmentAlreadyCompleted"
+msgstr "Запис вже завершено"
