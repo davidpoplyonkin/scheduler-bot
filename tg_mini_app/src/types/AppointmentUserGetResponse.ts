@@ -1,5 +1,5 @@
 import z from 'zod';
-import { ServiceIn } from './ConstraintUserGetResponse';
+import { ServiceBasicIn } from './Service';
 
 export const AppointmentStatus = z.enum(['PENDING', 'CONFIRMED', 'COMPLETED']);
 
@@ -7,7 +7,7 @@ export const AppointmentIn = z.object({
   id: z.number(),
   date: z.string(),
   time: z.string(),
-  service: ServiceIn,
+  service: ServiceBasicIn,
   status: AppointmentStatus,
 });
 

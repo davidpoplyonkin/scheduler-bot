@@ -1,12 +1,12 @@
 import z from 'zod';
-import { ServiceIn } from './ConstraintUserGetResponse';
+import { ServiceBasicIn } from './Service';
 
 export const ProofVerifyResponseSchema = z.object({
   appointmentId: z.number(),
   userName: z.string(),
   appointmentDate: z.string(),
   appointmentTime: z.string(),
-  service: ServiceIn,
+  service: ServiceBasicIn,
 });
 
 export type ProofVerifyResponse = z.infer<typeof ProofVerifyResponseSchema>;

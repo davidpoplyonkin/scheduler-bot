@@ -21,7 +21,6 @@ export function BottomButton({
   const button = type === 'main' ? tg.MainButton : tg.SecondaryButton;
 
   useEffect(() => {
-    button.setText(text);
     button.show();
 
     const handleButtonClick = () => {
@@ -34,6 +33,10 @@ export function BottomButton({
       button.offClick(handleButtonClick);
     };
   }, []);
+
+  useEffect(() => {
+    button.setText(text);
+  }, [text])
 
   const theme = useThemeStore();
   useEffect(() => {

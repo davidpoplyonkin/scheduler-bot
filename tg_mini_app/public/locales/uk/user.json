@@ -1,6 +1,7 @@
 {
   "buttons": {
-    "book": "Записатися"
+    "book": "Записатися",
+    "pay": "Оплатити"
   },
   "validation": {
     "dateRequired": "Оберіть дату",

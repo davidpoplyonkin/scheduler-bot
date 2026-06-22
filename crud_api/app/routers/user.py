@@ -9,10 +9,10 @@ import datetime
 from schemas import (Role, AppointmentUserGetResponse,
                      AppointmentReserveRequest, AppointmentReserveResponse,
                      ProofGenerateRequest, ProofGenerateResponse,
-                     UserAuthSchema, ServiceOut)
+                     UserAuthSchema, ServiceBasicOut)
 from deps import authorize_current_user, DBSessionDep
 from utils import (get_today_in_tz, get_init_data_hash, create_invoice,
-                   schedule_invoice_check, get_service_name)
+                   schedule_invoice_check, get_service_name, on_payment_success)
 from config import (MIN_ADVANCE_MINUTES, MAX_ADVANCE_DAYS, FORBIDDEN_WEEKDAYS,
                     QR_SECRET_KEY, INVOICE_CHECK_MAX_RETRIES)
 import crud
@@ -38,7 +38,7 @@ async def get_appointments(
             id=appt.id,
             date=appt.block.date,
             time=appt.block.time_slot.start_time,
-            service=ServiceOut(
+            service=ServiceBasicOut(
                 id=appt.service.id,
                 name=get_service_name(appt.service, accept_language)
             ),
@@ -91,6 +91,16 @@ async def reserve_appointment(
         request.time_slot_id,
         request.service_id
     )
+
+    # Free service - confirm immediately with calendar + notification
+    if appointment.service.amount_minor == 0:
+        await on_payment_success(session, appointment.id)
+        return AppointmentReserveResponse(
+            id=appointment.id,
+            date=appointment.block.date,
+            time=appointment.block.time_slot.start_time,
+            payment_url=None
+        )
 
     # Create payment invoice via bank API
     invoice_result = await create_invoice(

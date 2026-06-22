@@ -8,7 +8,7 @@ export const CreateAppointmentMutationOptions = mutationOptions({
       id: number;
       date: string;
       time: string;
-      paymentUrl: string;
+      paymentUrl: string | null;
     }>('user/appointments', {
       date: values.date,
       timeSlotId: values.slot,

@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
 import { Chip, Flex, Text, useMatches } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { DatePicker } from '@mantine/dates';
@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { notifications } from '@mantine/notifications';
 
 import { BlocksQueryOptions } from '../index.queries';
 import { CreateAppointmentMutationOptions } from './booking.queries';
@@ -26,6 +27,14 @@ export const Route = createLazyFileRoute('/user/booking')({
 
 const tg = window.Telegram.WebApp;
 
+const getCurrencyInfo = (code: number): { symbol: string; exponent: number } => {
+  const map: Record<number, { symbol: string; exponent: number }> = {
+    980: { symbol: 'UAH', exponent: 2 },
+    840: { symbol: 'USD', exponent: 2 },
+  };
+  return map[code] ?? { symbol: '', exponent: 2 };
+};
+
 function BookingForm() {
   const { t } = useTranslation(['user', 'shared']);
 
@@ -34,6 +43,7 @@ function BookingForm() {
   }, []);
 
   const queryClient = useQueryClient()
+  const navigate = useNavigate();
 
   const { constraints } = Route.useLoaderData();
 
@@ -73,9 +83,19 @@ function BookingForm() {
       // Invalidate queries so returning user sees fresh data
       queryClient.invalidateQueries({ queryKey: ['user-appointments'] });
 
-      // Open payment page in external browser and close mini app
-      tg.openLink(data.paymentUrl);
-      tg.close();
+      if (data.paymentUrl) {
+        // Open payment page in external browser and close mini app
+        tg.openLink(data.paymentUrl);
+        tg.close();
+      } else {
+        // Free service - show success notification and redirect to appointments list
+        notifications.show({
+          title: t('notifications.success', { ns: 'shared' }),
+          message: t('notifications.appointmentBooked', { ns: 'user' }),
+          color: 'green',
+        });
+        navigate({ to: '/user' });
+      }
     },
     onError: (error) => {
       // If the chosen slot was booked while the user was filling the form,
@@ -109,6 +129,21 @@ function BookingForm() {
 
   const formRef = useRef<HTMLFormElement>(null);
   const formValid = form.isValid();
+
+  // Compute button text based on selected service
+  const selectedServiceId = form.getValues().service;
+  const selectedService = selectedServiceId
+    ? constraints.services.find(s => s.id === Number(selectedServiceId))
+    : null;
+
+  const buttonText = (() => {
+    if (!selectedService) return t('buttons.submit', { ns: 'shared' });
+    if (selectedService.amountMinor === 0) return t('buttons.book', { ns: 'user' });
+
+    const { symbol, exponent } = getCurrencyInfo(selectedService.currencyCode);
+    const amount = (selectedService.amountMinor / Math.pow(10, exponent)).toFixed(0);
+    return `${t('buttons.pay', { ns: 'user' })} ${amount} ${symbol}`;
+  })();
 
   const { ref: datePickerRef, width, height } = useElementSize();
   const orientation = useMatches({ base: 'horizontal' as const, xs: 'vertical' as const });
@@ -153,7 +188,7 @@ function BookingForm() {
   return (
     <form ref={formRef} onSubmit={handleSubmit}>
       <BottomButton
-        text={t('buttons.submit', { ns: 'shared' })}
+        text={buttonText}
         isActive={formValid}
         callback={triggerSubmit}
       />
