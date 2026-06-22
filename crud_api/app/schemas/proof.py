@@ -2,7 +2,7 @@ from pydantic import BaseModel
 import datetime
 
 from .config import config_dict
-from .service import ServiceOut
+from .service import ServiceBasicOut
 
 
 class ProofGenerateRequest(BaseModel):
@@ -34,6 +34,6 @@ class ProofVerifyResponse(BaseModel):
     user_name: str
     appointment_date: datetime.date
     appointment_time: datetime.time
-    service: ServiceOut
+    service: ServiceBasicOut
 
     model_config = config_dict

@@ -1,6 +1,7 @@
 {
   "buttons": {
-    "book": "Book"
+    "book": "Book",
+    "pay": "Pay"
   },
   "validation": {
     "dateRequired": "Date is required",

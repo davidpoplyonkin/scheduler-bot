@@ -8,7 +8,7 @@ import datetime
 from schemas import (Role, AppointmentAdminGetResponse, AppointmentAdminOut,
                      AppointmentAdminAggregateOut, BlackoutCreateRequest,
                      BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse,
-                     ServiceOut)
+                     ServiceBasicOut)
 from models.appointment import AppointmentStatus
 from deps import authorize_current_user, DBSessionDep
 from utils import verify_init_data, InitDataInvalid, InitDataExpired, get_service_name
@@ -44,7 +44,7 @@ async def get_appointments(
                 time=appt.block.time_slot.start_time,
                 user_id=appt.user_id,
                 user_full_name=appt.user.full_name,
-                service=ServiceOut(
+                service=ServiceBasicOut(
                     id=appt.service.id,
                     name=get_service_name(appt.service, accept_language)
                 ),
@@ -128,9 +128,9 @@ async def verify_proof(
             user_name=appointment.user.full_name or f"User {appointment.user_id}",
             appointment_date=appointment.block.date,
             appointment_time=appointment.block.time_slot.start_time,
-            service=ServiceOut(
+            service=ServiceBasicOut(
                 id=appointment.service.id,
-                name=get_service_name(appointment.service, accept_language),
+                name=get_service_name(appointment.service, accept_language)
             )
         )
 

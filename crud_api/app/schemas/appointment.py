@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, AliasPath
 import datetime
 
 from .config import config_dict
-from .service import ServiceOut
+from .service import ServiceBasicOut
 from models.appointment import AppointmentStatus
 
 class AppointmentUserGetResponse(BaseModel):
@@ -11,7 +11,7 @@ class AppointmentUserGetResponse(BaseModel):
     time: datetime.time = Field(
         validation_alias=AliasPath("block", "time_slot", "start_time")
     )
-    service: ServiceOut
+    service: ServiceBasicOut
     status: AppointmentStatus
 
     model_config = config_dict
@@ -27,7 +27,7 @@ class AppointmentReserveResponse(BaseModel):
     id: int
     date: datetime.date
     time: datetime.time
-    payment_url: str
+    payment_url: str | None
 
     model_config = config_dict
 
@@ -37,7 +37,7 @@ class AppointmentAdminOut(BaseModel):
     time: datetime.time
     user_id: int
     user_full_name: str | None
-    service: ServiceOut
+    service: ServiceBasicOut
     status: AppointmentStatus
 
     model_config = config_dict

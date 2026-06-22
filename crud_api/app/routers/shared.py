@@ -30,7 +30,12 @@ async def get_constraints(
     return ConstraintGetResponse(
         time_slots=time_slots,
         services=[
-            ServiceOut(id=s.id, name=get_service_name(s, accept_language))
+            ServiceOut(
+                id=s.id,
+                name=get_service_name(s, accept_language),
+                amount_minor=s.amount_minor,
+                currency_code=s.currency_code
+            )
             for s in services
         ],
         min_advance_minutes=MIN_ADVANCE_MINUTES,
