@@ -34,3 +34,12 @@ msgstr "Запись не принадлежит этому пользовате
 
 msgid "error.invoiceFailed"
 msgstr "Не удалось создать счёт на оплату"
+
+msgid "error.appointmentPending"
+msgstr "Оплата записи ещё не подтверждена"
+
+msgid "error.appointmentCancelled"
+msgstr "Запись была отменена"
+
+msgid "error.appointmentAlreadyCompleted"
+msgstr "Запись уже завершена"

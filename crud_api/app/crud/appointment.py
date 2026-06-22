@@ -225,18 +225,55 @@ async def get_admin_appointments(
     return results.unique().scalars().all()
 
 
-async def get_appointment_with_user(
+async def complete_appointment(
     session: AsyncSession,
     appointment_id: int,
+    user_id: int,
 ) -> Appointment | None:
-    statement = (
+    """
+    Mark appointment as COMPLETED after verification, otherwise return None.
+    """
+    stmt = (
+        update(Appointment)
+        .where(
+            Appointment.id == appointment_id,
+            Appointment.user_id == user_id,
+            Appointment.status == AppointmentStatus.CONFIRMED,
+        )
+        .values(status=AppointmentStatus.COMPLETED)
+        .returning(Appointment.id)
+    )
+    result = await session.execute(stmt)
+    updated_id = result.scalar_one_or_none()
+
+    if updated_id is None:
+        await session.commit()
+        return None
+
+    await session.commit()
+
+    # Re-fetch with eager loading
+    eager_stmt = (
         select(Appointment)
         .options(
             joinedload(Appointment.block).joinedload(Block.time_slot),
             joinedload(Appointment.user),
-            joinedload(Appointment.service)
+            joinedload(Appointment.service),
         )
         .where(Appointment.id == appointment_id)
     )
-    result = await session.execute(statement)
+    result = await session.execute(eager_stmt)
     return result.unique().scalar_one_or_none()
+
+
+async def get_appointment_by_id(
+    session: AsyncSession,
+    appointment_id: int,
+) -> Appointment | None:
+    """Fetch appointment by ID with minimal relations for error diagnosis."""
+    statement = (
+        select(Appointment)
+        .where(Appointment.id == appointment_id)
+    )
+    result = await session.execute(statement)
+    return result.scalar_one_or_none()
