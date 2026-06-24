@@ -15,7 +15,7 @@ import { BottomButton } from '../../components/BottomButton'
 import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
 import { type AppointmentStatus } from '../../types/AppointmentUserGetResponse'
-import { useUserAppointmentSSE } from '../../hooks/useUserAppointmentSSE'
+import { useAppointmentSSE } from '../../hooks/useAppointmentSSE'
 import SearchingIcon from '../../assets/Searching.svg?react'
 
 dayjs.extend(customParseFormat)
@@ -30,7 +30,7 @@ const tg = window.Telegram.WebApp;
 function UserList() {
   const { t } = useTranslation(['user', 'shared']);
 
-  useUserAppointmentSSE();
+  useAppointmentSSE('user-appointments');
 
   useEffect(() => {
     tg.SecondaryButton.hide();
