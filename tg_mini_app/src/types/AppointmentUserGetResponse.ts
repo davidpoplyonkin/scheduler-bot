@@ -2,6 +2,7 @@ import z from 'zod';
 import { ServiceBasicIn } from './Service';
 
 export const AppointmentStatus = z.enum(['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED']);
+export type AppointmentStatus = z.infer<typeof AppointmentStatus>
 
 export const AppointmentIn = z.object({
   id: z.number(),

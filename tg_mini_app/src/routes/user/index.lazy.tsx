@@ -4,7 +4,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { IconQrcode } from '@tabler/icons-react'
 import { QRCode } from 'react-qr-code'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -14,6 +14,7 @@ import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './in
 import { BottomButton } from '../../components/BottomButton'
 import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
+import { type AppointmentStatus } from '../../types/AppointmentUserGetResponse'
 import { useUserAppointmentSSE } from '../../hooks/useUserAppointmentSSE'
 import SearchingIcon from '../../assets/Searching.svg?react'
 
@@ -49,6 +50,15 @@ function UserList() {
 
   const [modalTitle, setModalTitle] = useState('');
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
+  const selectedAppointmentStatusRef = useRef<AppointmentStatus | null>(null);
+
+  useEffect(() => {
+    if (selectedAppointmentStatusRef.current === 'COMPLETED') {
+      close();
+      selectedAppointmentStatusRef.current = null;
+    }
+  }, [appointments, close]);
 
   const mutation = useMutation({
     ...GenerateProofMutationOptions,
@@ -79,6 +89,10 @@ function UserList() {
       ) : (
         <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
           {visibleAppointments?.map((appt) => {
+            if (appt.id === selectedAppointmentId) {
+              selectedAppointmentStatusRef.current = appt.status;
+            }
+
             const day = dayjs.utc(appt.date).format('dd, MMM D');
             const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
             const dayTime = [
@@ -112,6 +126,7 @@ function UserList() {
                   onClick={() => {
                     mutation.mutate(appt.id);
                     setModalTitle(`${service} · ${dayTime}`);
+                    setSelectedAppointmentId(appt.id);
                   }}
                   loading={loadingId === appt.id}
                 >
@@ -127,7 +142,11 @@ function UserList() {
       )}
       <Modal
         opened={opened}
-        onClose={close}
+        onClose={() => {
+          close();
+          setSelectedAppointmentId(null);
+          selectedAppointmentStatusRef.current = null;
+        }}
         title={modalTitle}
         size='xs'
         centered
