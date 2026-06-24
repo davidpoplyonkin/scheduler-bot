@@ -18,6 +18,7 @@
   "statuses": {
     "PENDING": "Pending",
     "CONFIRMED": "Confirmed",
-    "COMPLETED": "Completed"
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled"
   }
 }

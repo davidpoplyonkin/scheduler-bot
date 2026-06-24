@@ -3,10 +3,8 @@ from typing import Annotated
 
 from exceptions import AppException
 from starlette import status
-import datetime
 
-from schemas import (Role, AppointmentAdminGetResponse, AppointmentAdminOut,
-                     AppointmentAdminAggregateOut, BlackoutCreateRequest,
+from schemas import (Role, AppointmentAdminOut, BlackoutCreateRequest,
                      BlackoutCreateResponse, ProofVerifyRequest, ProofVerifyResponse,
                      ServiceBasicOut)
 from models.appointment import AppointmentStatus
@@ -24,40 +22,29 @@ router = APIRouter(
 @router.get(
     "/appointments",
     dependencies=[Depends(authorize_current_user([Role.ADMIN]))],
-    response_model=AppointmentAdminGetResponse
+    response_model=list[AppointmentAdminOut]
 )
 async def get_appointments(
     session: DBSessionDep,
     accept_language: Annotated[str, Header()] = "en",
-) -> AppointmentAdminGetResponse:
+) -> list[AppointmentAdminOut]:
     appointments = await crud.get_admin_appointments(session)
 
-    # Aggregate by date with translated service names
-    appointments_by_date: dict[datetime.date, list[AppointmentAdminOut]] = {}
-    for appt in appointments:
-        date_key = appt.block.date
-        if date_key not in appointments_by_date:
-            appointments_by_date[date_key] = []
-        appointments_by_date[date_key].append(
-            AppointmentAdminOut(
-                id=appt.id,
-                time=appt.block.time_slot.start_time,
-                user_id=appt.user_id,
-                user_full_name=appt.user.full_name,
-                service=ServiceBasicOut(
-                    id=appt.service.id,
-                    name=get_service_name(appt.service, accept_language)
-                ),
-                status=appt.status,
-            )
+    return [
+        AppointmentAdminOut(
+            id=appt.id,
+            date=appt.block.date,
+            time=appt.block.time_slot.start_time,
+            user_id=appt.user_id,
+            user_full_name=appt.user.full_name,
+            service=ServiceBasicOut(
+                id=appt.service.id,
+                name=get_service_name(appt.service, accept_language)
+            ),
+            status=appt.status,
         )
-
-    return AppointmentAdminGetResponse(
-        days=[
-            AppointmentAdminAggregateOut(date=date, appointments=appts)
-            for date, appts in sorted(appointments_by_date.items())
-        ]
-    )
+        for appt in appointments
+    ]
 
 
 @router.post(

@@ -34,23 +34,11 @@ class AppointmentReserveResponse(BaseModel):
 
 class AppointmentAdminOut(BaseModel):
     id: int
+    date: datetime.date
     time: datetime.time
     user_id: int
     user_full_name: str | None
     service: ServiceBasicOut
     status: AppointmentStatus
-
-    model_config = config_dict
-
-
-class AppointmentAdminAggregateOut(BaseModel):
-    date: datetime.date
-    appointments: list[AppointmentAdminOut]
-
-    model_config = config_dict
-
-
-class AppointmentAdminGetResponse(BaseModel):
-    days: list[AppointmentAdminAggregateOut]
 
     model_config = config_dict

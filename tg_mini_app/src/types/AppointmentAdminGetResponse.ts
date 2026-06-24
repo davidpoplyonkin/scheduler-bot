@@ -2,8 +2,9 @@ import z from 'zod';
 import { ServiceBasicIn } from './Service';
 import { AppointmentStatus } from './AppointmentUserGetResponse';
 
-const AppointmentAdminIn = z.object({
+export const AppointmentAdminInSchema = z.object({
   id: z.number(),
+  date: z.string(),
   time: z.string(),
   userId: z.number(),
   userFullName: z.string().nullable(),
@@ -11,13 +12,8 @@ const AppointmentAdminIn = z.object({
   status: AppointmentStatus,
 });
 
-const AppointmentAdminAggregateIn = z.object({
-  date: z.string(),
-  appointments: z.array(AppointmentAdminIn),
-});
+export type AppointmentAdminIn = z.infer<typeof AppointmentAdminInSchema>;
 
-export const AppointmentAdminGetResponseSchema = z.object({
-  days: z.array(AppointmentAdminAggregateIn),
-});
+export const AppointmentAdminGetResponseSchema = z.array(AppointmentAdminInSchema);
 
 export type AppointmentAdminGetResponse = z.infer<typeof AppointmentAdminGetResponseSchema>;

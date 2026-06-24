@@ -18,6 +18,7 @@
   "statuses": {
     "PENDING": "Ожидает",
     "CONFIRMED": "Подтверждено",
-    "COMPLETED": "Завершено"
+    "COMPLETED": "Завершено",
+    "CANCELLED": "Отменено"
   }
 }

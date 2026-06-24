@@ -3,3 +3,4 @@ from .user import router as router_user
 from .admin import router as router_admin
 from .shared import router as router_shared
 from .webhook import router as router_webhook
+from .sse import router as router_sse
