@@ -1,13 +1,48 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import asyncpg
+import redis.asyncio as redis
 
-from routers import router_auth, router_user, router_admin, router_shared, router_webhook
-from config import API_ALLOW_ORIGINS
+from routers import router_auth, router_user, router_admin, router_shared, router_webhook, router_sse
+from config import API_ALLOW_ORIGINS, PG_USER, PG_PASSWORD, PG_DB, REDIS_PASSWORD
 from exceptions import AppException
 from utils.translations import t
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Dedicated asyncpg connection for LISTEN (separate from SQLAlchemy pool)
+    pg_conn = await asyncpg.connect(
+        user=PG_USER,
+        password=PG_PASSWORD,
+        database=PG_DB,
+        host="postgres",
+    )
+
+    redis_client = redis.Redis(
+        host="redis",
+        port=6379,
+        password=REDIS_PASSWORD,
+        decode_responses=True,
+    )
+    app.state.redis = redis_client
+
+    async def redis_publisher(conn, pid, channel, payload):
+        await redis_client.publish("appointment_updates", payload)
+
+    await pg_conn.add_listener("appointment_updates", redis_publisher)
+
+    yield
+
+    await pg_conn.remove_listener("appointment_updates", redis_publisher)
+    await pg_conn.close()
+    await redis_client.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(AppException)
@@ -36,6 +71,7 @@ app.include_router(router_user)
 app.include_router(router_admin)
 app.include_router(router_shared)
 app.include_router(router_webhook)
+app.include_router(router_sse)
 
 # Add CORS middleware
 app.add_middleware(

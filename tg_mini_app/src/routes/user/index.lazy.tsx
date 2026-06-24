@@ -14,6 +14,7 @@ import { UserAppointmentsQueryOptions, GenerateProofMutationOptions } from './in
 import { BottomButton } from '../../components/BottomButton'
 import { EmptyState } from '../../components/EmptyState'
 import { type ProofGenerateResponse } from '../../types/ProofGenerateResponse'
+import { useUserAppointmentSSE } from '../../hooks/useUserAppointmentSSE'
 import SearchingIcon from '../../assets/Searching.svg?react'
 
 dayjs.extend(customParseFormat)
@@ -28,6 +29,8 @@ const tg = window.Telegram.WebApp;
 function UserList() {
   const { t } = useTranslation(['user', 'shared']);
 
+  useUserAppointmentSSE();
+
   useEffect(() => {
     tg.SecondaryButton.hide();
   }, []);
@@ -35,6 +38,11 @@ function UserList() {
   const navigate = useNavigate();
 
   const { data: appointments } = useQuery(UserAppointmentsQueryOptions);
+
+  // Filter out cancelled appointments for display
+  const visibleAppointments = appointments?.filter(
+    (appt) => appt.status !== 'CANCELLED'
+  );
 
   const [opened, { open, close }] = useDisclosure(false);
   const [proofData, setProofData] = useState<ProofGenerateResponse | null>(null);
@@ -64,13 +72,13 @@ function UserList() {
         isActive={true}
         callback={() => {navigate({ to: '/user/booking' })}}
       />
-      {appointments?.length === 0 ? (
+      {visibleAppointments?.length === 0 ? (
         <EmptyState text={t('screens.noAppointments', { ns: 'shared' })}>
           <SearchingIcon height={128} fill='var(--mantine-color-dimmed)' />
         </EmptyState>
       ) : (
         <Timeline bulletSize={16} lineWidth={2} active={-1} mb='md'>
-          {appointments?.map((appt) => {
+          {visibleAppointments?.map((appt) => {
             const day = dayjs.utc(appt.date).format('dd, MMM D');
             const time = dayjs.utc(appt.time, 'HH:mm:ss').format('HH:mm');
             const dayTime = [

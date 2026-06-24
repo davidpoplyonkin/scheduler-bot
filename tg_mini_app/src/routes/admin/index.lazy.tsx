@@ -10,6 +10,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { AdminAppointmentsQueryOptions, VerifyProofMutationOptions } from './index.queries';
 import { BottomButton } from '../../components/BottomButton';
 import { EmptyState } from '../../components/EmptyState';
+import { useAdminAppointmentSSE } from '../../hooks/useAdminAppointmentSSE';
 import SearchingIcon from '../../assets/Searching.svg?react';
 
 const tg = window.Telegram.WebApp;
@@ -25,7 +26,23 @@ function AdminList() {
   const { t } = useTranslation(['admin', 'shared']);
   const navigate = useNavigate();
 
+  useAdminAppointmentSSE();
+
   const { data } = useQuery(AdminAppointmentsQueryOptions);
+
+  // Filter cancelled appointments from each day, remove empty days
+  const filteredData = data
+    ? {
+        days: data.days
+          .map((day) => ({
+            ...day,
+            appointments: day.appointments.filter(
+              (a) => a.status !== 'CANCELLED'
+            ),
+          }))
+          .filter((day) => day.appointments.length > 0),
+      }
+    : undefined;
 
   const verifyMutation = useMutation({
     ...VerifyProofMutationOptions,
@@ -78,12 +95,12 @@ function AdminList() {
         isActive={!verifyMutation.isPending}
         callback={handleScanQr}
       />
-      {data?.days.length === 0 ? (
+      {filteredData?.days.length === 0 ? (
         <EmptyState text={t('screens.noAppointments', { ns: 'shared' })}>
           <SearchingIcon height={128} fill='var(--mantine-color-dimmed)' />
         </EmptyState>
       ) : (
-        data?.days.map((day) => (
+        filteredData?.days.map((day) => (
           <div key={day.date}>
             <Divider
               label={dayjs.utc(day.date).format('dd, MMM D')}
