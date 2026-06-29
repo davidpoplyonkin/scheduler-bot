@@ -107,6 +107,7 @@ async def reserve_appointment(
         amount_minor=appointment.service.amount_minor,
         currency_code=appointment.service.currency_code,
         reference=str(appointment.id),
+        description=appointment.service.destination_template,
     )
 
     if invoice_result is None:
