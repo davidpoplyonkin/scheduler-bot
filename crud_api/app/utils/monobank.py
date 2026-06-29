@@ -10,7 +10,7 @@ async def create_invoice(
     amount_minor: int,
     currency_code: int,
     reference: str,
-    description: str | None = None,
+    description: str,
 ) -> InvoiceCreateResponse | None:
     """
     Create a Monobank invoice and return (invoice_id, page_url).
