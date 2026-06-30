@@ -42,13 +42,12 @@ scheduler-bot/
 │ ├── schemas/ # Pydantic schemas
 │ ├── utils/ # Auth, Telegram verification
 │ └── alembic/ # Database migrations
-├── nginx/ # Reverse proxy config
 └── docker-compose.yml
 ```
 ## Getting Started
 ### Prerequisites
 - Docker and Docker Compose
-- [Nested Proxy](https://github.com/davidpoplyonkin/nested-proxy)
+- Nginx Proxy Manager
 - Telegram Bot
   * [Create the bot](https://core.telegram.org/bots/features#creating-a-new-bot), and save the token.
   * Determine the admin Telegram ID
@@ -71,7 +70,7 @@ scheduler-bot/
 ### Setup
 #### Nginx Configuration
 
-Update `nginx/nginx.conf` to use the actual `server_name`'s
+Add proxy hosts to Nginx Proxy Manager.
 #### Environment Variables
 
 Crete a `.env` file at the project root:
