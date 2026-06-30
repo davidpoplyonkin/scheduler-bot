@@ -1,5 +1,6 @@
 services:
   crud-api:
+    hostname: crud-sb
     build:
       context: ./crud_api
     secrets:
@@ -34,7 +35,9 @@ services:
       - redis
     networks:
       - internal
+      - nginx-proxy-manager
   tg-mini-app:
+    hostname: tma-sb
     build:
       context: ./tg_mini_app
       args:
@@ -43,6 +46,7 @@ services:
       - crud-api
     networks:
       - internal
+      - nginx-proxy-manager
   postgres:
     image: postgres:17
     volumes:
@@ -62,17 +66,6 @@ services:
       - redis_data:/data
     networks:
       - internal
-  nginx:
-    hostname: scheduler-nginx
-    image: nginx:1.29.8-alpine
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - crud-api
-      - tg-mini-app
-    networks:
-      - master-nginx-network
-      - internal
 
 volumes:
   postgres_data:
@@ -80,7 +73,7 @@ volumes:
 
 networks:
   internal:
-  master-nginx-network:
+  nginx-proxy-manager:
     external: true
 
 secrets:

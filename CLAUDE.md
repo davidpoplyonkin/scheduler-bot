@@ -23,7 +23,7 @@ docker compose up crud-api postgres
 
 ### Full Stack
 ```bash
-docker compose up    # All services (requires master-nginx-network)
+docker compose up    # All services (requires nginx-proxy-manager)
 ```
 
 ### Database Migrations
